@@ -9,7 +9,7 @@ const SCHEMAS_PATH = "F:\\projects\\shopBackend\\dist\\schemas";
 ( async () => {
     const config = await new Config().loadConfig(CONFIG_PATH);
 
-    const dbProcessor = new DBProcessor();
+    const dbProcessor = new DBProcessor(config.auth);
     await dbProcessor.importSchemas(SCHEMAS_PATH);
     await dbProcessor.createConnection();
     const httpServer = new Server(dbProcessor, config.app);

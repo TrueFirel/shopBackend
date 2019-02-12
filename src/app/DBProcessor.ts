@@ -1,14 +1,20 @@
 import Realm from "realm";
+import jwt from "jsonwebtoken";
 import { promises } from "fs";
 import { parse } from "path";
+
+interface IDBProcessor {
+    private_key: string
+}
 
 export default class DBProcessor {
     public connection: any;
     protected schemas: any[];
-    protected options: any;
+    protected options: IDBProcessor;
 
-    constructor() {
+    constructor(options: any) {
         this.schemas = [];
+        this.options = options;
         return this;
     }
 
@@ -32,4 +38,15 @@ export default class DBProcessor {
         this.connection = await Realm.open({ schema: this.schemas });
     }
 
+    public createToken(data: any) {
+        return jwt.sign(data, this.options.private_key);
+    }
+
+    public isValidToken(token: string) {
+        return !!jwt.verify(token, this.options.private_key);
+    }
+
+    public static decodeToken(token: string) {
+        return jwt.decode(token);
+    }
 }

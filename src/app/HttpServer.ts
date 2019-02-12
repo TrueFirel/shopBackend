@@ -6,6 +6,7 @@ import cors from "cors";
 import httpError from "http-errors";
 import * as bodyParser from "body-parser";
 import DBProcessor from "./DBProcessor";
+import BaseResource from "../resources/BaseResource";
 
 interface IServerOprions {
     port: number,
@@ -16,13 +17,13 @@ export default class HttpServer {
     protected expressApp: Express;
     protected options: IServerOprions;
     protected expressRouter: Router;
-    protected dbConnection: DBProcessor;
+    protected dbProcessor: DBProcessor;
     public httpServer: Server;
 
     constructor(dbConnection: DBProcessor, options: IServerOprions) {
         this.expressApp = express();
         this.options = options;
-        this.dbConnection = dbConnection;
+        this.dbProcessor = dbConnection;
         this.expressRouter = express.Router();
         this.httpServer = new Server();
     }
@@ -36,6 +37,7 @@ export default class HttpServer {
         this.expressRouter.use("", () => {
             throw new httpError.NotFound("Wrong path");
         });
+        this.expressApp.use(HttpServer.resourceHandler.bind(this));
         this.expressApp.use(HttpServer.errorHandler.bind(this));
 
         this.httpServer = await this.expressApp.listen(this.options, () => {
@@ -50,11 +52,17 @@ export default class HttpServer {
         !err.status && next(err);
     }
 
+    protected static resourceHandler(resource: any, req: any, res: any, next: any) {
+        if(resource instanceof BaseResource){
+            res.json(resource.uncover());
+        } else next(resource);
+    }
+
     public async importRoute(filename: string) {
         const { "default": routes } = await import(filename);
 
         if(routes.call) {
-            return routes.call(this.expressRouter, this.dbConnection.connection)
+            return routes.call(this.expressRouter, this.dbProcessor)
         }
     }
 
