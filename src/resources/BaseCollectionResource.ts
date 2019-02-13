@@ -1,4 +1,4 @@
-import BaseResource from './BaseResource';
+import BaseResource from "./BaseResource";
 
 export default class BaseCollectionResource extends BaseResource {
 
@@ -8,10 +8,10 @@ export default class BaseCollectionResource extends BaseResource {
         return this.data.map((item: any) => new this.innerResource(item).uncover());
     }
 
-    public uncover(){
+    public uncover() {
         return {
-            data: this.uncoverItems()
-        }
+            data: this.uncoverItems(),
+        };
     }
 
 }

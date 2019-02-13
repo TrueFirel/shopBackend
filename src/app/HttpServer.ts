@@ -1,24 +1,38 @@
-import express, { Express, Router } from 'express';
-import { promises } from "fs";
-import { parse } from "path";
-import { Server } from "http";
-import cors from "cors";
-import httpError from "http-errors";
 import * as bodyParser from "body-parser";
-import DBProcessor from "./DBProcessor";
+import cors from "cors";
+import express, { Express, Router } from "express";
+import { promises } from "fs";
+import { Server } from "http";
+import httpError from "http-errors";
+import { parse } from "path";
 import BaseResource from "../resources/BaseResource";
+import Logger from "../util/Logger";
+import DBProcessor from "./DBProcessor";
 
 interface IServerOprions {
-    port: number,
-    host: string
+    port: number;
+    host: string;
 }
 
 export default class HttpServer {
+
+    protected static errorHandler(err: any, req: any, res: any, next: any) {
+        res.status(err.status || 500);
+        res.json(typeof err.message === "string" ? {message: err.message} : err.message);
+        if (!err.status) next(err);
+    }
+
+    protected static resourceHandler(resource: any, req: any, res: any, next: any) {
+        if (resource instanceof BaseResource) {
+            res.json(resource.uncover());
+        } else next(resource);
+    }
+    public httpServer: Server;
     protected expressApp: Express;
     protected options: IServerOprions;
     protected expressRouter: Router;
     protected dbProcessor: DBProcessor;
-    public httpServer: Server;
+    protected logger: Logger;
 
     constructor(dbConnection: DBProcessor, options: IServerOprions) {
         this.expressApp = express();
@@ -26,6 +40,7 @@ export default class HttpServer {
         this.dbProcessor = dbConnection;
         this.expressRouter = express.Router();
         this.httpServer = new Server();
+        this.logger = new Logger();
     }
 
     public async start() {
@@ -41,38 +56,26 @@ export default class HttpServer {
         this.expressApp.use(HttpServer.errorHandler.bind(this));
 
         this.httpServer = await this.expressApp.listen(this.options, () => {
-            console.log(`HTTP server was started on adress //${this.options.host}:${this.options.port}`);
+            this.logger.info(`HTTP server was started on adress //${this.options.host}:${this.options.port}`);
         });
 
-    }
-
-    protected static errorHandler(err: any, req: any, res: any, next: any) {
-        res.status(err.status || 500);
-        res.json(typeof err.message === "string" ? {message: err.message} : err.message);
-        !err.status && next(err);
-    }
-
-    protected static resourceHandler(resource: any, req: any, res: any, next: any) {
-        if(resource instanceof BaseResource){
-            res.json(resource.uncover());
-        } else next(resource);
     }
 
     public async importRoute(filename: string) {
         const { "default": routes } = await import(filename);
 
-        if(routes.call) {
-            return routes.call(this.expressRouter, this.dbProcessor)
+        if (routes.call) {
+            return routes.call(this.expressRouter, this.dbProcessor);
         }
     }
 
     public async importRoutes(path: string) {
         const files = await promises.readdir(path);
-        await Promise.all(files.map( async(file: any) => {
+        await Promise.all(files.map( async (file: any) => {
             const filePath = `${path}\\${file}`;
             const stat = await promises.stat(filePath);
-            if(stat.isDirectory()) await this.importRoutes(filePath);
-            if(parse(file).ext === ".js") this.importRoute(filePath);
+            if (stat.isDirectory()) await this.importRoutes(filePath);
+            if (parse(file).ext === ".js") this.importRoute(filePath);
         }));
     }
 }

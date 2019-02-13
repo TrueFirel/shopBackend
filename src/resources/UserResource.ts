@@ -1,8 +1,8 @@
 import BaseResource from "./BaseResource";
 
-export default class UserResource extends BaseResource{
+export default class UserResource extends BaseResource {
 
-    public uncover(){
+    public uncover() {
         return {
             id: this.id,
             name: this.name,
@@ -10,7 +10,7 @@ export default class UserResource extends BaseResource{
             token: this.token,
             phone_number: this.phone_number,
             photo: this.photo,
-            create_time: this.create_time
-        }
+            create_time: this.create_time,
+        };
     }
 }

@@ -1,6 +1,6 @@
 import Config from "./app/Config";
-import Server from "./app/HttpServer";
 import DBProcessor from "./app/DBProcessor";
+import Server from "./app/HttpServer";
 
 const CONFIG_PATH = "F:\\projects\\shopBackend\\config";
 const ROUTES_PATH = "F:\\projects\\shopBackend\\dist\\routes";

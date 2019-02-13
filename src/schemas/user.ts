@@ -10,7 +10,7 @@ export default {
         phone_number: "string",
         photo: {
             type: "string",
-            optional: true
-        }
-    }
-}
+            optional: true,
+        },
+    },
+};
