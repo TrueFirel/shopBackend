@@ -3,6 +3,15 @@ export default {
     properties: {
         company_name: "string",
         address: "string",
+        token: "string",
         password: "string",
+        create_time: "date",
+        contact_number: "string",
+        photo: {
+            type: "string",
+            optional: true,
+        },
+        id: "string",
+        web_site: "string",
     },
 };

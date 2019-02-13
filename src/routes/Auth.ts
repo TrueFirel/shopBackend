@@ -1,5 +1,5 @@
 import DBProcessor from "../app/DBProcessor";
-import UserControllerWrapper from "../controllers/UserController";
+import UserControllerWrapper from "../controllers/User/UserController";
 
 export default function(dbProcessor: DBProcessor) {
 

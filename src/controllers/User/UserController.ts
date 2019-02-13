@@ -2,10 +2,10 @@ import httpError from "http-errors";
 import Joi from "joi";
 import { sha512 } from "js-sha512";
 import uuid from "uuid/v4";
-import DBProcessor from "../app/DBProcessor";
-import UserAuthResource from "../resources/UserAuthResource";
-import UserResource from "../resources/UserResource";
-import Validator from "../util/Validator";
+import DBProcessor from "../../app/DBProcessor";
+import UserAuthResource from "../../resources/UserAuthResource";
+import UserResource from "../../resources/UserResource";
+import Validator from "../../util/Validator";
 
 export default function(dbProcessor: DBProcessor) {
 
@@ -91,10 +91,10 @@ export default function(dbProcessor: DBProcessor) {
                 const { id } = req.params;
 
                 if (!phoneNumber && !name && !username && !photo && !password) {
-                    throw new httpError.BadRequest({message: "Parameters for put was expected"} as any);
+                    throw new httpError.BadRequest({message: "Parameters for update user was expected"} as any);
                 }
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
-                if (!user) throw new httpError.BadRequest({message: "There is no user with such id"} as any);
+                if (!user) throw new httpError.NotFound({message: "User with such id was not found"} as any);
                 else {
                     await connection.write(() => {
                         try {
@@ -109,6 +109,16 @@ export default function(dbProcessor: DBProcessor) {
                         }
                     });
                 }
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static async getUser(req: any, res: any, next: any) {
+            try {
+                const { id } = req.params;
+                const user = connection.objects("user").filtered(`id = "${id}"`)[0];
+                next(new UserResource(user));
             } catch (err) {
                 next(err);
             }
