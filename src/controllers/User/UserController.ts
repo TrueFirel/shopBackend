@@ -118,6 +118,7 @@ export default function(dbProcessor: DBProcessor) {
             try {
                 const { id } = req.params;
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
+                if(!user) throw new httpError.BadRequest({ message: "User with such id was not found" } as any);
                 next(new UserResource(user));
             } catch (err) {
                 next(err);

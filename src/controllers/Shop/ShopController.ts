@@ -100,5 +100,18 @@ export default function(dbProcessor: DBProcessor) {
                 next(err);
             }
         }
+
+        public static async getShop(req: any, res: any, next: any) {
+            try {
+                const { id } = req.params;
+
+                const shop = connection.objects("shop").filtered(`id = "${id}"`)[0];
+                if (!shop) throw new httpError.BadRequest({message: "Shop with such id was not found"} as any);
+
+                next(new ShopResource(shop));
+            } catch (err) {
+                next(err);
+            }
+        }
     };
 }
