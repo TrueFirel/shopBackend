@@ -14,10 +14,10 @@ export default function(dbProcessor: DBProcessor) {
                 }
                 const token = authHeader.split(" ")[1];
                 const user = dbProcessor.connection.objects("user").filtered(`token = "${token}"`);
-                if (!user) {
+                if (!user[0]) {
                     throw new httpError.Unauthorized("No valid token");
                 }
-                req.user = user;
+                req.user = user[0];
                 next();
             } catch (err) {
                 next(err);
