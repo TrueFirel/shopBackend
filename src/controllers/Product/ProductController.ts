@@ -18,7 +18,6 @@ export default function(dbProcessor: DBProcessor) {
             description: Joi.string().required(),
             web_site: Joi.string().required(),
             price: Joi.number().required(),
-            shop_id: Joi.string().required(),
         };
 
         public static async AddProduct(req: any, res: any, next: any) {
@@ -29,9 +28,10 @@ export default function(dbProcessor: DBProcessor) {
                     description,
                     web_site: webSite,
                     price,
-                    shop_id: shopId,
                 }: any = Validator(req.body, ProductController.AddProductValidationSchema);
                 const id = uuid();
+
+                const { id: shopId }= req.params;
 
                 if (!Event[eventName]) {
                     throw new httpError.NotFound({ message: "event with such name was not found" } as any);

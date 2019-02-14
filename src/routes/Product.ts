@@ -4,5 +4,4 @@ import ProductControllerWrapper from "../controllers/Product/ProductController";
 export default function(dbProcessor: DBProcessor) {
 
     const UserController = ProductControllerWrapper(dbProcessor);
-    this.post("/product", UserController.AddProduct);
 }
