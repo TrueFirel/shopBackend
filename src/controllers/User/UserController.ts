@@ -5,6 +5,7 @@ import uuid from "uuid/v4";
 import DBProcessor from "../../app/DBProcessor";
 import ShopAuthResource from "../../resources/ShopAuthResource";
 import UserAuthResource from "../../resources/UserAuthResource";
+import UserCollectionResource from "../../resources/UserCollectionResource";
 import UserResource from "../../resources/UserResource";
 import Validator from "../../util/Validator";
 
@@ -122,12 +123,22 @@ export default function(dbProcessor: DBProcessor) {
             }
         }
 
-        public static async getUser(req: any, res: any, next: any) {
+        public static getUser(req: any, res: any, next: any) {
             try {
                 const { id } = req.params;
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
                 if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
                 next(new UserResource(user));
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static getUsers(req: any, res: any, next: any) {
+            try {
+                const { offset, limit } = req.query;
+                const users = connection.objects("user");
+                next(new UserCollectionResource(users, { offset, limit }));
             } catch (err) {
                 next(err);
             }

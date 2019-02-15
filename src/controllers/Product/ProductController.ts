@@ -3,6 +3,7 @@ import Joi from "joi";
 import uuid = require("uuid");
 import DBProcessor from "../../app/DBProcessor";
 import { Event } from "../../constants/Events";
+import ProductCollectionResource from "../../resources/ProductCollectionResource";
 import ProductResource from "../../resources/ProductResource";
 import shop from "../../schemas/shop";
 import Validator from "../../util/Validator";
@@ -105,7 +106,7 @@ export default function(dbProcessor: DBProcessor) {
             }
         }
 
-        public static async getProduct(req: any, res: any, next: any) {
+        public static getProduct(req: any, res: any, next: any) {
             try {
                 const { id } = req.params;
                 const product = connection.objects("product").filtered(`id = "${id}"`)[0];
@@ -113,6 +114,18 @@ export default function(dbProcessor: DBProcessor) {
                     throw new httpError.NotFound({ message: "product with such id was not found"} as any);
                 }
                 next(new ProductResource(product));
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static getProducts(req: any, res: any, next: any) {
+            try {
+                const { offset, limit } = req.query;
+
+                const products = connection.objects("product");
+
+                next(new ProductCollectionResource(products, { offset, limit }));
             } catch (err) {
                 next(err);
             }

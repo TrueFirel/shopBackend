@@ -4,6 +4,7 @@ import {sha512} from "js-sha512";
 import uuid = require("uuid");
 import DBProcessor from "../../app/DBProcessor";
 import ShopAuthResource from "../../resources/ShopAuthResource";
+import ShopCollectionResource from "../../resources/ShopCollectionResource";
 import ShopResource from "../../resources/ShopResource";
 import Validator from "../../util/Validator";
 
@@ -101,7 +102,7 @@ export default function(dbProcessor: DBProcessor) {
             }
         }
 
-        public static async getShop(req: any, res: any, next: any) {
+        public static getShop(req: any, res: any, next: any) {
             try {
                 const { id } = req.params;
 
@@ -109,6 +110,18 @@ export default function(dbProcessor: DBProcessor) {
                 if (!shop) throw new httpError.BadRequest({message: "Shop with such id was not found"} as any);
 
                 next(new ShopResource(shop));
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static getShops(req: any, res: any, next: any) {
+            try {
+                const { offset, limit } = req.query;
+
+                const shops = connection.objects("shop");
+
+                next(new ShopCollectionResource(shops, { offset, limit }));
             } catch (err) {
                 next(err);
             }
