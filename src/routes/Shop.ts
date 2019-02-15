@@ -1,8 +1,7 @@
 import DBProcessor from "../app/DBProcessor";
+import ProductControllerWrapper from "../controllers/Product/ProductController";
 import ShopControllerWrapper from "../controllers/Shop/ShopController";
 import CheckAuth from "../middleware/CheckAuth";
-import ProductControllerWrapper from "../controllers/Product/ProductController";
-
 
 export default function(dbProcessor: DBProcessor) {
 
@@ -17,4 +16,5 @@ export default function(dbProcessor: DBProcessor) {
     this.put("/shop/:id", UserController.updateShop);
 
     this.post("/shop/:id/product", ProductController.AddProduct);
+    this.put("/shop/:shopId/product/:id", ProductController.updateProduct);
 }

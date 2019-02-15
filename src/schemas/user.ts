@@ -8,6 +8,7 @@ export default {
         password: "string",
         create_time: "date",
         phone_number: "string",
+        favorite_products: "favorite[]",
         photo: {
             type: "string",
             optional: true,

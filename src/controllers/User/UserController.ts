@@ -3,6 +3,7 @@ import Joi from "joi";
 import { sha512 } from "js-sha512";
 import uuid from "uuid/v4";
 import DBProcessor from "../../app/DBProcessor";
+import ShopAuthResource from "../../resources/ShopAuthResource";
 import UserAuthResource from "../../resources/UserAuthResource";
 import UserResource from "../../resources/UserResource";
 import Validator from "../../util/Validator";
@@ -66,13 +67,20 @@ export default function(dbProcessor: DBProcessor) {
             }
         }
 
-        public static async loginUser(req: any, res: any, next: any) {
+        // Need to be moved to another controller
+        public static async loginAccount(req: any, res: any, next: any) {
             try {
                 const { number: phoneNumber, password } = Validator(req.body, UserController.loginUserValidationSchema);
                 const user = connection.objects("user")
-                    .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`);
-                if (!user.length) throw new httpError.Unauthorized({message: "Such user is not exist"} as any);
-                next(new UserAuthResource(user[0]));
+                    .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
+                if (!user) {
+                    const shop = connection.objects("shop")
+                        .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
+                    if (!shop) {
+                        throw new httpError.Unauthorized({message: "Such account is not exist"} as any);
+                    }
+                    next(new ShopAuthResource(shop));
+                } else next(new UserAuthResource(user));
             } catch (err) {
                 next(err);
             }
@@ -94,7 +102,7 @@ export default function(dbProcessor: DBProcessor) {
                     throw new httpError.BadRequest({message: "Parameters for update user was expected"} as any);
                 }
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
-                if (!user) throw new httpError.NotFound({message: "User with such id was not found"} as any);
+                if (!user) throw new httpError.NotFound({message: "user with such id was not found"} as any);
                 else {
                     await connection.write(() => {
                         try {
@@ -118,7 +126,7 @@ export default function(dbProcessor: DBProcessor) {
             try {
                 const { id } = req.params;
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
-                if(!user) throw new httpError.BadRequest({ message: "User with such id was not found" } as any);
+                if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
                 next(new UserResource(user));
             } catch (err) {
                 next(err);

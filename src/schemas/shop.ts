@@ -7,6 +7,7 @@ export default {
         password: "string",
         create_time: "date",
         contact_number: "string",
+        products: "product[]",
         photo: {
             type: "string",
             optional: true,

@@ -5,5 +5,5 @@ export default function(dbProcessor: DBProcessor) {
 
     const UserController = UserControllerWrapper(dbProcessor);
     // @ts-ignore
-    this.post("/login", UserController.loginUser);
+    this.post("/login", UserController.loginAccount);
 }

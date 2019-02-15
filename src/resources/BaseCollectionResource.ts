@@ -5,7 +5,14 @@ export default class BaseCollectionResource extends BaseResource {
     protected innerResource: any = BaseResource;
 
     public uncoverItems() {
-        return this.data.map((item: any) => new this.innerResource(item).uncover());
+        const { offset, limit } = this.options;
+        let resourcedData = this.data.map((item: any) => new this.innerResource(item).uncover());
+
+        if (offset && limit) resourcedData = resourcedData.slice(offset).slice(0, limit);
+        if (offset) resourcedData = resourcedData.slice(offset);
+        if (limit) resourcedData = resourcedData.slice(0, limit);
+
+        return resourcedData;
     }
 
     public uncover() {
@@ -13,5 +20,4 @@ export default class BaseCollectionResource extends BaseResource {
             data: this.uncoverItems(),
         };
     }
-
 }
