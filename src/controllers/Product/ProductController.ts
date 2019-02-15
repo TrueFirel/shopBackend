@@ -56,7 +56,7 @@ export default function(dbProcessor: DBProcessor) {
                     try {
                         const product = connection.create("product", {
                             product_name: productName, event_name: Event[eventName], description,
-                            web_site: webSite, price, shop_id: shopId, id,
+                            web_site: webSite, price, shop_id: shopId, id, likes: 0, dislikes: 0,
                         });
                         shop.products.push(product);
                         next(new ProductResource(product));

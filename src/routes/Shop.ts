@@ -9,12 +9,10 @@ export default function(dbProcessor: DBProcessor) {
     const UserController = ShopControllerWrapper(dbProcessor);
     const ProductController = ProductControllerWrapper(dbProcessor);
 
-    this.use("/shop", checkAuth.isShopAuth);
-
     this.post("/shop", UserController.registerShop);
-    this.get("/shop/:id", UserController.getShop);
-    this.put("/shop/:id", UserController.updateShop);
+    this.get("/shop/:id", checkAuth.isShopAuth, UserController.getShop);
+    this.put("/shop/:id", checkAuth.isShopAuth, UserController.updateShop);
 
-    this.post("/shop/:id/product", ProductController.AddProduct);
-    this.put("/shop/:shopId/product/:id", ProductController.updateProduct);
+    this.post("/shop/:id/product", checkAuth.isShopAuth, ProductController.AddProduct);
+    this.put("/shop/:shopId/product/:id", checkAuth.isShopAuth, ProductController.updateProduct);
 }

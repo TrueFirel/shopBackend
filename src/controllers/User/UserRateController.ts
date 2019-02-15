@@ -37,7 +37,28 @@ export default function(dbProcessor: DBProcessor) {
                                 is_favorite: isFavorite,
                             });
                             user.favorite_products.push(favorite);
+                            if (isFavorite) catalogProduct.likes += 1;
+                            if (isFavorite === false) catalogProduct.dislikes -= 1;
                         } else {
+                            if (product.is_favorite === null) {
+                                if (isFavorite) catalogProduct.likes += 1;
+                                if (isFavorite === false) catalogProduct.dislikes += 1;
+                            }
+                            if (product.is_favorite) {
+                                if (isFavorite === false) {
+                                    catalogProduct.likes -= 1;
+                                    catalogProduct.dislikes += 1;
+                                }
+                                if (isFavorite === null) catalogProduct.likes -= 1;
+                            }
+
+                            if (product.is_favorite === false) {
+                                if (isFavorite === true) {
+                                    catalogProduct.likes += 1;
+                                    catalogProduct.dislikes -= 1;
+                                }
+                                if (isFavorite === null) catalogProduct.dislikes -= 1;
+                            }
                             product.is_favorite = isFavorite;
                         }
                         res.send({ message: "successful" });

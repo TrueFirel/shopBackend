@@ -9,6 +9,7 @@ export default {
         create_time: "date",
         phone_number: "string",
         favorite_products: "favorite[]",
+        reviews: "review[]",
         photo: {
             type: "string",
             optional: true,

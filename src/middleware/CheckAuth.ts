@@ -5,19 +5,16 @@ export default function(dbProcessor: DBProcessor) {
     return class CheckAuth {
         public static isUserAuth(req: any, res: any, next: any) {
             try {
-                if (req.url === "/" && req.method === "POST") {
-                    return next();
-                }
                 const authHeader = req.get("Authorization");
                 if (!authHeader || authHeader.split(" ")[0].toLocaleLowerCase() !== "bearer") {
                     throw new httpError.Unauthorized("No valid token");
                 }
                 const token = authHeader.split(" ")[1];
-                const user = dbProcessor.connection.objects("user").filtered(`token = "${token}"`);
-                if (!user[0]) {
+                const user = dbProcessor.connection.objects("user").filtered(`token = "${token}"`)[0];
+                if (!user) {
                     throw new httpError.Unauthorized("No valid token");
                 }
-                if (user[0]) req.user = user[0];
+                req.user = user;
                 next();
             } catch (err) {
                 next(err);
@@ -26,19 +23,16 @@ export default function(dbProcessor: DBProcessor) {
 
         public static isShopAuth(req: any, res: any, next: any) {
             try {
-                if (req.url === "/" && req.method === "POST") {
-                    return next();
-                }
                 const authHeader = req.get("Authorization");
                 if (!authHeader || authHeader.split(" ")[0].toLocaleLowerCase() !== "bearer") {
                     throw new httpError.Unauthorized("No valid token");
                 }
                 const token = authHeader.split(" ")[1];
-                const shop = dbProcessor.connection.objects("shop").filtered(`token = "${token}"`);
-                if (!shop[0]) {
+                const shop = dbProcessor.connection.objects("shop").filtered(`token = "${token}"`)[0];
+                if (!shop) {
                     throw new httpError.Unauthorized("No valid token");
                 }
-                if (shop[0]) req.shop = shop[0];
+                req.shop = shop;
                 next();
             } catch (err) {
                 next(err);

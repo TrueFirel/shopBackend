@@ -11,6 +11,8 @@ export default class ProductResource extends BaseResource {
             description: this.description,
             price: this.price,
             shop_id: this.shop_id,
+            likes: this.likes,
+            dislikes: this.dislikes,
         };
     }
 }
