@@ -48,7 +48,7 @@ export default function(dbProcessor: DBProcessor) {
                 const token = dbProcessor.createToken({id});
 
                 if (connection.objects("shop").filtered(`contact_number = "${contactNumber}"`).length) {
-                    throw new httpError.Unauthorized({ message: "Shop with such contact number already exist" } as any);
+                    throw new httpError.Unauthorized({ message: "shop with such contact number already exist" } as any);
                 }
                 await connection.write(() => {
                     try {
@@ -77,11 +77,11 @@ export default function(dbProcessor: DBProcessor) {
                 const { id } = req.params;
 
                 if (!companyName && !address && !webSite && !photo && !contactNumber && !password) {
-                    throw new httpError.BadRequest({message: "Parameters for update shop was expected"} as any);
+                    throw new httpError.BadRequest({message: "parameters for update shop was expected"} as any);
                 }
 
                 const shop = connection.objects("shop").filtered(`id = "${id}"`)[0];
-                if (!shop) throw new httpError.NotFound({ message: "Shop with such id was not found" } as any);
+                if (!shop) throw new httpError.NotFound({ message: "shop with such id was not found" } as any);
 
                 await connection.write(() => {
                     try {
@@ -107,7 +107,7 @@ export default function(dbProcessor: DBProcessor) {
                 const { id } = req.params;
 
                 const shop = connection.objects("shop").filtered(`id = "${id}"`)[0];
-                if (!shop) throw new httpError.BadRequest({message: "Shop with such id was not found"} as any);
+                if (!shop) throw new httpError.BadRequest({message: "shop with such id was not found"} as any);
 
                 next(new ShopResource(shop));
             } catch (err) {

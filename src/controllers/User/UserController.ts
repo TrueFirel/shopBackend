@@ -50,7 +50,7 @@ export default function(dbProcessor: DBProcessor) {
                 const token = dbProcessor.createToken(id);
 
                 if (connection.objects("user").filtered(`phone_number = "${phoneNumber}"`).length) {
-                    throw new httpError.BadRequest({ message: "User with such phone number already exist" } as any);
+                    throw new httpError.BadRequest({ message: "user with such phone number already exist" } as any);
                 }
 
                 await  connection.write(async () => {
@@ -78,7 +78,7 @@ export default function(dbProcessor: DBProcessor) {
                     const shop = connection.objects("shop")
                         .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
                     if (!shop) {
-                        throw new httpError.Unauthorized({message: "Such account is not exist"} as any);
+                        throw new httpError.Unauthorized({message: "such account is not exist"} as any);
                     }
                     next(new ShopAuthResource(shop));
                 } else next(new UserAuthResource(user));
@@ -100,7 +100,7 @@ export default function(dbProcessor: DBProcessor) {
                 const { id } = req.params;
 
                 if (!phoneNumber && !name && !username && !photo && !password) {
-                    throw new httpError.BadRequest({message: "Parameters for update user was expected"} as any);
+                    throw new httpError.BadRequest({message: "parameters for update user was expected"} as any);
                 }
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
                 if (!user) throw new httpError.NotFound({message: "user with such id was not found"} as any);

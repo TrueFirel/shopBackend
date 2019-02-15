@@ -50,7 +50,7 @@ export default class HttpServer {
         this.expressApp.use(bodyParser.urlencoded());
         this.expressApp.use(this.expressRouter);
         this.expressRouter.use("", () => {
-            throw new httpError.NotFound("Wrong path");
+            throw new httpError.NotFound("wrong path");
         });
         this.expressApp.use(HttpServer.resourceHandler.bind(this));
         this.expressApp.use(HttpServer.errorHandler.bind(this));

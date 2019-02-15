@@ -50,7 +50,7 @@ export default function(dbProcessor: DBProcessor) {
                 const shop = connection.objects("shop").filtered(`id = "${shopId}"`)[0];
 
                 if (!shop) {
-                    throw new httpError.NotFound({ message: "Shop with such id was not found" } as any);
+                    throw new httpError.NotFound({ message: "shop with such id was not found" } as any);
                 }
                 await connection.write(() => {
                     try {
@@ -80,7 +80,7 @@ export default function(dbProcessor: DBProcessor) {
                 }: any = Validator(req.body, ProductController.UpdateProductValidationSchema);
 
                 if (!productName && !eventName && !description && !webSite && !price) {
-                    throw new httpError.BadRequest({ message: "Parameters for update user was expected" } as any);
+                    throw new httpError.BadRequest({ message: "parameters for update user was expected" } as any);
                 }
 
                 const { shopId, id: productId } = req.params;

@@ -55,7 +55,7 @@ export default function(dbProcessor: DBProcessor) {
                 const { offset, limit } = req.query;
 
                 const reviews = connection.objects("review").filtered(`product_id = "${id}"`);
-                if (!reviews.length) throw new httpError.NotFound({message: "Reviews of product with such id was not found"} as any);
+                if (!reviews.length) throw new httpError.NotFound({message: "reviews of product with such id was not found"} as any);
 
                 next(new ReviewCollectionResource(reviews, { offset, limit }));
             } catch (err) {

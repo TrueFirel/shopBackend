@@ -7,12 +7,12 @@ export default function(dbProcessor: DBProcessor) {
             try {
                 const authHeader = req.get("Authorization");
                 if (!authHeader || authHeader.split(" ")[0].toLocaleLowerCase() !== "bearer") {
-                    throw new httpError.Unauthorized("No valid token");
+                    throw new httpError.Unauthorized("no valid token");
                 }
                 const token = authHeader.split(" ")[1];
                 const user = dbProcessor.connection.objects("user").filtered(`token = "${token}"`)[0];
                 if (!user) {
-                    throw new httpError.Unauthorized("No valid token");
+                    throw new httpError.Unauthorized("no valid token");
                 }
                 req.user = user;
                 next();
@@ -25,12 +25,12 @@ export default function(dbProcessor: DBProcessor) {
             try {
                 const authHeader = req.get("Authorization");
                 if (!authHeader || authHeader.split(" ")[0].toLocaleLowerCase() !== "bearer") {
-                    throw new httpError.Unauthorized("No valid token");
+                    throw new httpError.Unauthorized("no valid token");
                 }
                 const token = authHeader.split(" ")[1];
                 const shop = dbProcessor.connection.objects("shop").filtered(`token = "${token}"`)[0];
                 if (!shop) {
-                    throw new httpError.Unauthorized("No valid token");
+                    throw new httpError.Unauthorized("no valid token");
                 }
                 req.shop = shop;
                 next();
@@ -43,13 +43,13 @@ export default function(dbProcessor: DBProcessor) {
             try {
                 const authHeader = req.get("Authorization");
                 if (!authHeader || authHeader.split(" ")[0].toLocaleLowerCase() !== "bearer") {
-                    throw new httpError.Unauthorized("No valid token");
+                    throw new httpError.Unauthorized("no valid token");
                 }
                 const token = authHeader.split(" ")[1];
                 const user = dbProcessor.connection.objects("user").filtered(`token = "${token}"`)[0];
                 const shop = dbProcessor.connection.objects("shop").filtered(`token = "${token}"`)[0];
                 if (!shop && !user) {
-                    throw new httpError.Unauthorized("No valid token");
+                    throw new httpError.Unauthorized("no valid token");
                 }
                 if (shop) req.shop = shop;
                 if (user) req.user = user;
