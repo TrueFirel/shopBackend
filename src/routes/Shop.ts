@@ -9,7 +9,7 @@ export default function(dbProcessor: DBProcessor) {
     const ShopController = ShopControllerWrapper(dbProcessor);
     const ProductController = ProductControllerWrapper(dbProcessor);
 
-    this.get("/shop/:id", checkAuth.isShopAuth, ShopController.getShop);
+    this.get("/shop/:id", checkAuth.isAnyAuth, ShopController.getShop);
     this.get("/shop", checkAuth.isAnyAuth, ShopController.getShops);
     this.post("/shop", ShopController.registerShop);
     this.post("/shop/:id/product", checkAuth.isShopAuth, ProductController.AddProduct);
