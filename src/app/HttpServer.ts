@@ -72,7 +72,7 @@ export default class HttpServer {
     public async importRoutes(path: string) {
         const files = await promises.readdir(path);
         await Promise.all(files.map( async (file: any) => {
-            const filePath = `${path}\\${file}`;
+            const filePath = `${path}/${file}`;
             const stat = await promises.stat(filePath);
             if (stat.isDirectory()) await this.importRoutes(filePath);
             if (parse(file).ext === ".js") this.importRoute(filePath);

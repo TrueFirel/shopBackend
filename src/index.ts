@@ -2,19 +2,15 @@ import Config from "./app/Config";
 import DBProcessor from "./app/DBProcessor";
 import Server from "./app/HttpServer";
 
-const CONFIG_PATH = "F:\\projects\\shopBackend\\config";
-const ROUTES_PATH = "F:\\projects\\shopBackend\\dist\\routes";
-const SCHEMAS_PATH = "F:\\projects\\shopBackend\\dist\\schemas";
-
 ( async () => {
-    const config = await new Config().loadConfig(CONFIG_PATH);
+    const config = await new Config().load();
 
-    const dbProcessor = new DBProcessor(config.auth);
-    await dbProcessor.importSchemas(SCHEMAS_PATH);
+    const dbProcessor = new DBProcessor(config.env.SECRET);
+    await dbProcessor.importSchemas(config.env.SCHEMAS_PATH);
     await dbProcessor.createConnection();
-    const httpServer = new Server(dbProcessor, config.app);
+    const httpServer = new Server(dbProcessor, { host: config.env.HOST, port: config.env.PORT });
 
-    await httpServer.importRoutes(ROUTES_PATH);
+    await httpServer.importRoutes(config.env.ROUTES_PATH);
     await httpServer.start();
 
 })();

@@ -30,7 +30,7 @@ export default class DBProcessor {
     public async importSchemas(path: string) {
         const schemas = await promises.readdir(path);
         await Promise.all(schemas.map(async (schema) => {
-            const schemaPath = `${path}\\${schema}`;
+            const schemaPath = `${path}/${schema}`;
             const schemaStat = await promises.stat(schemaPath);
 
             if (schemaStat.isDirectory()) await this.importSchemas(schemaPath);
