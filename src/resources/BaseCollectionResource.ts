@@ -9,8 +9,8 @@ export default class BaseCollectionResource extends BaseResource {
         let resourcedData = this.data.map((item: any) => new this.innerResource(item).uncover());
 
         if (offset && limit) resourcedData = resourcedData.slice(offset).slice(0, limit);
-        if (offset) resourcedData = resourcedData.slice(offset);
-        if (limit) resourcedData = resourcedData.slice(0, limit);
+        else if (offset) resourcedData = resourcedData.slice(offset);
+        else if (limit) resourcedData = resourcedData.slice(0, limit);
 
         return resourcedData;
     }

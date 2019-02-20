@@ -13,6 +13,7 @@ export default class ProductResource extends BaseResource {
             shop_id: this.shop_id,
             likes: this.likes,
             dislikes: this.dislikes,
+            create_time: this.create_time,
         };
     }
 }

@@ -8,6 +8,7 @@ export default {
         web_site: "string",
         price: "double",
         shop_id: "string",
+        create_time: "date",
         reviews: "review[]",
         likes: {
             optional: true,
