@@ -76,7 +76,7 @@ export default function(dbProcessor: DBProcessor) {
                     .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
                 if (!user) {
                     const shop = connection.objects("shop")
-                        .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
+                        .filtered(`contact_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
                     if (!shop) {
                         throw new httpError.Unauthorized({message: "such account is not exist"} as any);
                     }
