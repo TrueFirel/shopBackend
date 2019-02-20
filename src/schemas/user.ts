@@ -10,10 +10,6 @@ export default {
             type: "string",
             optional: true,
         },
-        is_verified: {
-            type: "bool",
-            optional: true,
-        },
         username: "string",
         name: "string",
         password: "string",

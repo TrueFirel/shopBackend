@@ -11,10 +11,6 @@ export default {
             type: "string",
             optional: true,
         },
-        is_verified: {
-            type: "bool",
-            optional: true,
-        },
         password: "string",
         create_time: "date",
         contact_number: "string",

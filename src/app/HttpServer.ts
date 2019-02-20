@@ -7,12 +7,9 @@ import httpError from "http-errors";
 import { parse } from "path";
 import BaseResource from "../resources/BaseResource";
 import Logger from "../util/Logger";
+import Config from "./Config";
 import DBProcessor from "./DBProcessor";
-
-interface IServerOprions {
-    port: number;
-    host: string;
-}
+import MessageClient from "./MessageClient";
 
 export default class HttpServer {
 
@@ -29,18 +26,24 @@ export default class HttpServer {
     }
     public httpServer: Server;
     protected expressApp: Express;
-    protected options: IServerOprions;
+    protected config: any;
     protected expressRouter: Router;
     protected dbProcessor: DBProcessor;
     protected logger: Logger;
+    protected messageClient: MessageClient;
 
-    constructor(dbConnection: DBProcessor, options: IServerOprions) {
+    constructor(dbConnection: DBProcessor, config: Config) {
         this.expressApp = express();
-        this.options = options;
+        this.config = config;
         this.dbProcessor = dbConnection;
         this.expressRouter = express.Router();
         this.httpServer = new Server();
         this.logger = new Logger();
+        this.messageClient = new MessageClient({
+            sid: this.config.env.TWILLIO_SID,
+            token: this.config.env.TWILLIO_TOKEN,
+            number: this.config.env.TWILLIO_NUMBER,
+        });
     }
 
     public async start() {
@@ -55,8 +58,9 @@ export default class HttpServer {
         this.expressApp.use(HttpServer.resourceHandler.bind(this));
         this.expressApp.use(HttpServer.errorHandler.bind(this));
 
-        this.httpServer = await this.expressApp.listen(this.options, () => {
-            this.logger.info(`HTTP server was started on adress //${this.options.host}:${this.options.port}`);
+        this.httpServer = await this.expressApp.listen(
+            { host: this.config.env.HOST, port: this.config.env.PORT }, () => {
+            this.logger.info(`HTTP server was started on adress //${this.config.env.HOST}:${this.config.env.PORT}`);
         });
 
     }
@@ -65,7 +69,7 @@ export default class HttpServer {
         const { "default": routes } = await import(filename);
 
         if (routes.call) {
-            return routes.call(this.expressRouter, this.dbProcessor);
+            return routes.call(this.expressRouter, this.dbProcessor, this.messageClient);
         }
     }
 
