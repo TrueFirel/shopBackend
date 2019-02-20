@@ -8,7 +8,7 @@ import Server from "./app/HttpServer";
     const dbProcessor = new DBProcessor({ private_key: config.env.SECRET });
     await dbProcessor.importSchemas(config.env.SCHEMAS_PATH);
     await dbProcessor.createConnection();
-    const httpServer = new Server(dbProcessor, { host: config.env.HOST, port: config.env.PORT });
+    const httpServer = new Server(dbProcessor, config);
 
     await httpServer.importRoutes(config.env.ROUTES_PATH);
     await httpServer.start();

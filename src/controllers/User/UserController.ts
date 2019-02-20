@@ -3,13 +3,14 @@ import Joi from "joi";
 import { sha512 } from "js-sha512";
 import uuid from "uuid/v4";
 import DBProcessor from "../../app/DBProcessor";
+import MessageClient from "../../app/MessageClient";
 import ShopAuthResource from "../../resources/ShopAuthResource";
 import UserAuthResource from "../../resources/UserAuthResource";
 import UserCollectionResource from "../../resources/UserCollectionResource";
 import UserResource from "../../resources/UserResource";
 import Validator from "../../util/Validator";
 
-export default function(dbProcessor: DBProcessor) {
+export default function(dbProcessor: DBProcessor, messageClient: MessageClient) {
 
     const { connection } = dbProcessor;
 
@@ -47,17 +48,40 @@ export default function(dbProcessor: DBProcessor) {
                 }: any = Validator(req.body, UserController.registerUserValidationSchema);
 
                 const id = uuid();
-                const token = dbProcessor.createToken(id);
 
                 if (connection.objects("user").filtered(`phone_number = "${phoneNumber}"`).length) {
                     throw new httpError.BadRequest({ message: "user with such phone number already exist" } as any);
                 }
 
                 await  connection.write(async () => {
-
                     try {
-                        const user = await connection.create("user", { id, token, username, name,
-                            password: sha512(password), create_time: Date(), phone_number: phoneNumber, photo });
+                        const verificationCode = MessageClient.generateCode(4);
+                        const user = connection.create("user", { id, username, name,
+                            password: sha512(password), create_time: Date(), phone_number: phoneNumber,
+                            photo, verification_code: verificationCode });
+                        messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`);
+                        next(new UserResource(user));
+                    } catch (err) {
+                        throw new httpError.ServiceUnavailable({ message: "server error" } as any);
+                    }
+                });
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static async verifyPhoneNumber(req: any, res: any, next: any) {
+            try {
+                const { code } = Validator(req.body, { code: Joi.string() });
+                const { id } = req.params;
+
+                const user = connection.objects("user").filtered(`id = "${id}" AND verification_code = "${code}"`)[0];
+                if (!user) throw new httpError.NotFound({ message: "user with such id was not find or already verified" } as any);
+                await connection.write(() => {
+                    try {
+                        user.verification_code = null;
+                        user.token = dbProcessor.createToken(id);
+                        user.is_verified = true;
                         next(new UserAuthResource(user));
                     } catch (err) {
                         throw new httpError.ServiceUnavailable({ message: "server error" } as any);

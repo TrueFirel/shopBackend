@@ -1,12 +1,13 @@
 import DBProcessor from "../app/DBProcessor";
+import MessageClient from "../app/MessageClient";
 import UserControllerWrapper from "../controllers/User/UserController";
 import UserRateControllerWrapper from "../controllers/User/UserRateController";
 import UserRevewControllerWrapper from "../controllers/User/UserReviewController";
 import CheckAuth from "../middleware/CheckAuth";
 
-export default function(dbProcessor: DBProcessor) {
+export default function(dbProcessor: DBProcessor, messageClient: MessageClient) {
 
-    const UserController = UserControllerWrapper(dbProcessor);
+    const UserController = UserControllerWrapper(dbProcessor, messageClient);
     const UserReviewController = UserRevewControllerWrapper(dbProcessor);
     const checkAuth = CheckAuth(dbProcessor);
     const userRateController = UserRateControllerWrapper(dbProcessor);
@@ -18,4 +19,5 @@ export default function(dbProcessor: DBProcessor) {
     this.post("/user/:id/rate", checkAuth.isUserAuth, userRateController.postRate);
     this.post("/user/:id/review", checkAuth.isUserAuth, UserReviewController.PostReview);
     this.put("/user/:id", checkAuth.isUserAuth, UserController.updateUser);
+    this.put("/user/:id/verify", UserController.verifyPhoneNumber);
 }

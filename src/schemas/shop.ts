@@ -3,7 +3,14 @@ export default {
     properties: {
         company_name: "string",
         address: "string",
-        token: "string",
+        token: {
+            type: "string",
+            optional: true,
+        },
+        verification_code: {
+            type: "string",
+            optional: true,
+        },
         password: "string",
         create_time: "date",
         contact_number: "string",
