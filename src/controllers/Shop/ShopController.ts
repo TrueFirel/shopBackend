@@ -39,7 +39,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
                 const { id } = req.params;
 
                 const shop = connection.objects("shop").filtered(`id = "${id}" AND verification_code = "${code}"`)[0];
-                if (!shop) throw new httpError.NotFound({ message: "shop with such id was not find or already verified" } as any);
+                if (!shop) throw new httpError.NotFound({ message: "shop with such id was not found or already verified" } as any);
                 await connection.write(() => {
                     try {
                         shop.verification_code = null;

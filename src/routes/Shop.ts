@@ -12,6 +12,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
 
     this.get("/shop/:id", checkAuth.isAnyAuth, ShopController.getShop);
     this.get("/shop", checkAuth.isAnyAuth, ShopController.getShops);
+    this.get("/shop/:id/product", checkAuth.isAnyAuth, ProductController.getProducts);
     this.post("/shop", ShopController.registerShop);
     this.post("/shop/:id/product", checkAuth.isShopAuth, ProductController.AddProduct);
     this.put("/shop/:id", checkAuth.isShopAuth, ShopController.updateShop);

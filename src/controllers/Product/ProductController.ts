@@ -6,6 +6,7 @@ import { Event } from "../../constants/Events";
 import ProductCollectionResource from "../../resources/ProductCollectionResource";
 import ProductResource from "../../resources/ProductResource";
 import shop from "../../schemas/shop";
+import RealmListConverter from "../../util/RealmListConverter";
 import Validator from "../../util/Validator";
 
 export default function(dbProcessor: DBProcessor) {
@@ -122,11 +123,61 @@ export default function(dbProcessor: DBProcessor) {
 
         public static getProducts(req: any, res: any, next: any) {
             try {
-                const { offset, limit } = req.query;
+                const { offset, limit, sort, order, filter, filter_value  } = req.query;
 
-                const products = connection.objects("product");
+                const { id } = req.params;
 
-                next(new ProductCollectionResource(products, { offset, limit }));
+                let products: any;
+
+                if (id) {
+                    const shop = connection.objects("shop").filtered(`id = "${id}"`)[0];
+                    if (!shop) throw new httpError.NotFound({ message: "shop with such id was not found" } as any);
+                    products = new RealmListConverter(shop.products);
+                } else products = new RealmListConverter(connection.objects("product"));
+
+                ////////// MOVE TO SEPARATE CLASS
+
+                if  (filter_value && filter === "price") {
+                    products.data = products.data.filter((product: any) => product[filter] <= parseInt(filter_value, 10));
+                }
+
+                if  (filter_value && filter === "event_name") {
+                    products.data = products.data.filter((product: any) => product[filter] === filter_value);
+                }
+                if (sort && (sort === "likes" || sort === "create_time" || sort === "reviews")) {
+                    let comparatorAsc;
+                    let comparatorDesc;
+                    if (sort === "reviews") {
+                        comparatorAsc = (a: any, b: any) => {
+                            return a.reviews.length - b.reviews.length;
+                        };
+                        comparatorDesc = (a: any, b: any) => {
+                            return b.reviews.length - a.reviews.length;
+                        };
+                    } else if (sort === "create_time") {
+                        comparatorAsc = (a: any, b: any) => {
+                            a = new Date(a.create_time);
+                            b = new Date(b.create_time);
+                            return  a > b ? -1 : a < b ? 1 : 0;
+                        };
+                        comparatorDesc = (a: any, b: any) => {
+                            a = new Date(a.create_time);
+                            b = new Date(b.create_time);
+                            return  a < b ? -1 : a > b ? 1 : 0;
+                        };
+                    } else {
+                        comparatorAsc = (a: any, b: any) => {
+                            return a.likes - b.likes;
+                        };
+                        comparatorDesc = (a: any, b: any) => {
+                            return b.likes - a.likes;
+                        };
+                    }
+                    if (order === "desc") products.data = products.data.sort(comparatorDesc);
+                    else products.data = products.data.sort(comparatorAsc);
+                }
+
+                next(new ProductCollectionResource(products.data, { offset, limit }));
             } catch (err) {
                 next(err);
             }

@@ -32,35 +32,34 @@ export default function(dbProcessor: DBProcessor) {
                 await connection.write(() => {
                     try {
                         if (!product) {
-                            const favorite = connection.create("favorite", {
-                                user_id: userId,
-                                product: catalogProduct,
-                                is_favorite: isFavorite,
-                            });
-                            user.favorite_products.push(favorite);
+                            if (isFavorite !== null) {
+                                const favorite = connection.create("favorite", {
+                                    user_id: userId,
+                                    product: catalogProduct,
+                                    is_favorite: isFavorite,
+                                });
+                                user.favorite_products.push(favorite);
+                            }
                             if (isFavorite) catalogProduct.likes += 1;
                             if (isFavorite === false) catalogProduct.dislikes += 1;
                         } else {
-                            if (product.is_favorite === null) {
-                                if (isFavorite) catalogProduct.likes += 1;
-                                if (isFavorite === false) catalogProduct.dislikes += 1;
-                            }
-                            if (product.is_favorite) {
-                                if (isFavorite === false) {
+                            if (isFavorite === null) {
+                                if (product.is_favorite) catalogProduct.likes -= 1;
+                                else catalogProduct.dislikes -= 1;
+                                const favoriteProduct = connection.objects("favorite")
+                                    .find((favorite: any) => favorite.product.id === product.product.id);
+                                connection.delete(favoriteProduct);
+                            } else {
+                                if (product.is_favorite && isFavorite === false) {
                                     catalogProduct.likes -= 1;
                                     catalogProduct.dislikes += 1;
                                 }
-                                if (isFavorite === null) catalogProduct.likes -= 1;
-                            }
-
-                            if (product.is_favorite === false) {
-                                if (isFavorite === true) {
+                                if (product.is_favorite === false && isFavorite === true) {
                                     catalogProduct.likes += 1;
                                     catalogProduct.dislikes -= 1;
                                 }
-                                if (isFavorite === null) catalogProduct.dislikes -= 1;
+                                product.is_favorite = isFavorite;
                             }
-                            product.is_favorite = isFavorite;
                         }
                         res.send({ message: "successful" });
                     } catch (err) {
@@ -80,8 +79,15 @@ export default function(dbProcessor: DBProcessor) {
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
                 if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
                 const favorites = new RealmListConverter(user.favorite_products);
-                if  (filter && filter_value && filter === "event_name" || filter === "price") {
-                    favorites.data = favorites.data.filter((favorite: any) => favorite.product[filter].toString() === filter_value);
+
+                ////////// MOVE TO SEPARATE CLASS
+
+                if  (filter_value && filter === "price") {
+                    favorites.data = favorites.data.filter((favorite: any) => favorite.product[filter] <= parseInt(filter_value, 10));
+                }
+
+                if  (filter_value && filter === "event_name") {
+                    favorites.data = favorites.data.filter((favorite: any) => favorite.product[filter] === filter_value);
                 }
                 if (sort && (sort === "likes" || sort === "create_time" || sort === "reviews")) {
                     let comparatorAsc;
