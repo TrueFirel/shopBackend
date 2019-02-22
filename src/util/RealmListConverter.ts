@@ -3,5 +3,6 @@ export default class RealmListConverter {
 
     constructor(realmData: any) {
         this.data = Object.values(JSON.parse(JSON.stringify(realmData)));
+        return this;
     }
 }

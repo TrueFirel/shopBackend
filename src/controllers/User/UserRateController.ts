@@ -2,6 +2,7 @@ import httpError from "http-errors";
 import Joi from "joi";
 import DBProcessor from "../../app/DBProcessor";
 import UserFavoriteCollectionResource from "../../resources/UserFavoriteCollectionResource";
+import ArrayStreamliner from "../../util/ArrayStreamliner";
 import RealmListConverter from "../../util/RealmListConverter";
 import Validator from "../../util/Validator";
 
@@ -78,48 +79,15 @@ export default function(dbProcessor: DBProcessor) {
 
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
                 if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
-                const favorites = new RealmListConverter(user.favorite_products);
+                const favorites = new ArrayStreamliner(new RealmListConverter(user.favorite_products).data);
 
-                ////////// MOVE TO SEPARATE CLASS
+                if  (filter_value && filter === "price") favorites.filterLessNumbers(`product.${filter}`, filter_value);
+                if  (filter_value && filter === "event_name") favorites.filterByString(`product.${filter}`, filter_value);
 
-                if  (filter_value && filter === "price") {
-                    favorites.data = favorites.data.filter((favorite: any) => favorite.product[filter] <= parseInt(filter_value, 10));
-                }
-
-                if  (filter_value && filter === "event_name") {
-                    favorites.data = favorites.data.filter((favorite: any) => favorite.product[filter] === filter_value);
-                }
                 if (sort && (sort === "likes" || sort === "create_time" || sort === "reviews")) {
-                    let comparatorAsc;
-                    let comparatorDesc;
-                    if (sort === "reviews") {
-                        comparatorAsc = (a: any, b: any) => {
-                            return a.product.reviews.length - b.product.reviews.length;
-                        };
-                        comparatorDesc = (a: any, b: any) => {
-                            return b.product.reviews.length - a.product.reviews.length;
-                        };
-                    } else if (sort === "create_time") {
-                        comparatorAsc = (a: any, b: any) => {
-                            a = new Date(a.product.create_time);
-                            b = new Date(b.product.create_time);
-                            return  a > b ? -1 : a < b ? 1 : 0;
-                        };
-                        comparatorDesc = (a: any, b: any) => {
-                            a = new Date(a.product.create_time);
-                            b = new Date(b.product.create_time);
-                            return  a < b ? -1 : a > b ? 1 : 0;
-                        };
-                    } else {
-                        comparatorAsc = (a: any, b: any) => {
-                            return a.product.likes - b.product.likes;
-                        };
-                        comparatorDesc = (a: any, b: any) => {
-                            return b.product.likes - a.product.likes;
-                        };
-                    }
-                    if (order === "desc") favorites.data = favorites.data.sort(comparatorDesc);
-                    else favorites.data = favorites.data.sort(comparatorAsc);
+                    if (sort === "reviews") favorites.sortByNumber("product.reviews.length", order);
+                    else if (sort === "create_time") favorites.sortByDate("product.create_time", order);
+                    else favorites.sortByNumber("product.likes", order);
                 }
 
                 next(new UserFavoriteCollectionResource(favorites.data, { offset, limit }));

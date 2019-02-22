@@ -3,6 +3,7 @@ import DBProcessor from "./app/DBProcessor";
 import Server from "./app/HttpServer";
 
 ( async () => {
+
     const config = await new Config().load();
 
     const dbProcessor = new DBProcessor({ private_key: config.env.SECRET });
