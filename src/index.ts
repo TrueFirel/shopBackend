@@ -1,10 +1,17 @@
 import Config from "./app/Config";
+import DBProcessor from "./app/DBProcessor";
 import Server from "./app/HttpServer";
 
-const CONFIG_PATH = "F:\\projects\\shopBackend\\config";
-
 ( async () => {
-    const config = await new Config().loadConfig(CONFIG_PATH);
-    const httpServer = new Server(config.app);
+
+    const config = await new Config().load();
+
+    const dbProcessor = new DBProcessor({ private_key: config.env.SECRET });
+    await dbProcessor.importSchemas(config.env.SCHEMAS_PATH);
+    await dbProcessor.createConnection();
+    const httpServer = new Server(dbProcessor, config);
+
+    await httpServer.importRoutes(config.env.ROUTES_PATH);
     await httpServer.start();
+
 })();

@@ -1,0 +1,17 @@
+export enum Event {
+    BIRTHDAY = "День рождения",
+    NEW_YEAR = "Новый год",
+    CHRISTMAS = "Рождество",
+    ST_VALENTINE_DAY = "День святого валентина",
+    FEBRUARY_23 = "23 февраля",
+    MARCH_8 = "8 марта",
+    EASTER = "Пасха",
+    HALLOWEEN = "Хэллоуин",
+    MOTHER_DAY = "День матери",
+    FATHER_DAY = "День отца",
+    ANNIVERSARY = "Годовщина",
+    WEDDING = "Свадьба",
+    CHILD_BIRTH = "Рождение ребёнка",
+    GRADUATION = "Выпускной",
+    PROFESSIONAL_DAY = "Профессиональный день",
+}
