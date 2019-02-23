@@ -49,22 +49,34 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
 
                 const id = uuid();
 
-                if (connection.objects("user").filtered(`phone_number = "${phoneNumber}"`).length) {
-                    throw new httpError.BadRequest({ message: "user with such phone number already exist" } as any);
+                let user = connection.objects("user").filtered(`phone_number = "${phoneNumber}"`)[0];
+
+                if (user && user.token) throw new httpError.BadRequest({ message: "user with such phone number already exist" } as any);
+                else {
+                    await  connection.write(async () => {
+                        try {
+                            const verificationCode = MessageClient.generateCode(4);
+                            messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`);
+
+                            if (user && !user.token) {
+                                user.verification_code = verificationCode;
+                                user.username = username;
+                                user.name = name;
+                                user.photo = photo;
+                                user.password = password;
+                            } else {
+                                user = connection.create("user", { id, username, name,
+                                    password: sha512(password), create_time: Date(), phone_number: phoneNumber,
+                                    photo, verification_code: verificationCode });
+                            }
+
+                            next(new UserResource(user));
+                        } catch (err) {
+                            throw new httpError.ServiceUnavailable({ message: `server error: ` } as any);
+                        }
+                    });
                 }
 
-                await  connection.write(async () => {
-                    try {
-                        const verificationCode = MessageClient.generateCode(4);
-                        const user = connection.create("user", { id, username, name,
-                            password: sha512(password), create_time: Date(), phone_number: phoneNumber,
-                            photo, verification_code: verificationCode });
-                        messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`);
-                        next(new UserResource(user));
-                    } catch (err) {
-                        throw new httpError.ServiceUnavailable({ message: "server error" } as any);
-                    }
-                });
             } catch (err) {
                 next(err);
             }

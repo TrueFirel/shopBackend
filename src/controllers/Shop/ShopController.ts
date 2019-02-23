@@ -70,21 +70,35 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
                 const id = uuid();
                 // const token = dbProcessor.createToken({id});
 
-                if (connection.objects("shop").filtered(`contact_number = "${contactNumber}"`).length) {
-                    throw new httpError.Unauthorized({ message: "shop with such contact number already exist" } as any);
+                let shop = connection.objects("shop").filtered(`contact_number = "${contactNumber}"`)[0];
+
+                if (shop && shop.token) throw new httpError.Unauthorized({ message: "shop with such contact number already exist" } as any);
+                else {
+                    await connection.write(() => {
+                        try {
+                            const verificationCode = MessageClient.generateCode(4);
+                            messageClient.sendMessage(contactNumber, `Your verification code is: ${verificationCode}`);
+
+                            if (shop && !shop.token) {
+                                shop.verification_code = verificationCode;
+                                shop.company_name = companyName;
+                                shop.address = address;
+                                shop.web_site = webSite;
+                                shop.photo = photo;
+                                shop.password = password;
+                            } else {
+                                shop = connection.create("shop", {id, company_name: companyName, address,
+                                web_site: webSite, photo, contact_number: contactNumber, create_time: new Date(),
+                                password: sha512(password), verification_code: verificationCode });
+                            }
+
+                            next(new ShopResource(shop));
+                        } catch (err) {
+                            throw new httpError.ServiceUnavailable({ message: "server error" } as any);
+                        }
+                    });
                 }
-                await connection.write(() => {
-                    try {
-                        const verificationCode = MessageClient.generateCode(4);
-                        const shop = connection.create("shop", {id, company_name: companyName, address,
-                            web_site: webSite, photo, contact_number: contactNumber, create_time: new Date(),
-                            password: sha512(password), verification_code: verificationCode });
-                        messageClient.sendMessage(contactNumber, `Your verification code is: ${verificationCode}`);
-                        next(new ShopResource(shop));
-                    } catch (err) {
-                        throw new httpError.ServiceUnavailable({ message: "server error" } as any);
-                    }
-                });
+
             } catch (err) {
                 next(err);
             }
