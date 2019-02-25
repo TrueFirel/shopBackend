@@ -8,9 +8,10 @@ import ShopAuthResource from "../../resources/ShopAuthResource";
 import UserAuthResource from "../../resources/UserAuthResource";
 import UserCollectionResource from "../../resources/UserCollectionResource";
 import UserResource from "../../resources/UserResource";
+import AWSConnector from "../../util/AWSConnector";
 import Validator from "../../util/Validator";
 
-export default function(dbProcessor: DBProcessor, messageClient: MessageClient) {
+export default function(dbProcessor: DBProcessor, messageClient: MessageClient, awsConnector: AWSConnector) {
 
     const { connection } = dbProcessor;
 
@@ -18,10 +19,6 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
 
         public static registerUserValidationSchema = {
             number: Joi.string().min(5).max(15).required(),
-            name: Joi.string().required(),
-            username: Joi.string().required(),
-            photo: Joi.string().optional(),
-            password: Joi.string().required(),
         };
 
         public static loginUserValidationSchema = {
@@ -33,7 +30,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
             name: Joi.string().optional().allow(null),
             username: Joi.string().optional().allow(null),
             number: Joi.string().min(5).max(15).optional().allow(null),
-            photo: Joi.string().optional().allow(null),
+            photo: Joi.string().base64().optional().allow(null),
             password: Joi.string().optional().allow(null),
         };
 
@@ -41,10 +38,6 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
             try {
                 const {
                     number: phoneNumber,
-                    name,
-                    username,
-                    photo,
-                    password,
                 }: any = Validator(req.body, UserController.registerUserValidationSchema);
 
                 const id = uuid();
@@ -58,16 +51,10 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
                             const verificationCode = MessageClient.generateCode(4);
                             messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`);
 
-                            if (user && !user.token) {
-                                user.verification_code = verificationCode;
-                                user.username = username;
-                                user.name = name;
-                                user.photo = photo;
-                                user.password = password;
-                            } else {
-                                user = connection.create("user", { id, username, name,
-                                    password: sha512(password), create_time: Date(), phone_number: phoneNumber,
-                                    photo, verification_code: verificationCode });
+                            if (user && !user.token) user.verification_code = verificationCode;
+                            else {
+                                user = connection.create("user", { id, create_time: Date(), phone_number: phoneNumber,
+                                    verification_code: verificationCode });
                             }
 
                             next(new UserResource(user));
@@ -109,10 +96,10 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
             try {
                 const { number: phoneNumber, password } = Validator(req.body, UserController.loginUserValidationSchema);
                 const user = connection.objects("user")
-                    .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
+                    .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
                 if (!user) {
                     const shop = connection.objects("shop")
-                        .filtered(`contact_number = "${phoneNumber}" AND password = "${sha512(password)}"`)[0];
+                        .filtered(`contact_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
                     if (!shop) {
                         throw new httpError.Unauthorized({message: "such account is not exist"} as any);
                     }
@@ -129,11 +116,12 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
                     number: phoneNumber,
                     name,
                     username,
-                    photo,
                     password,
                 } = Validator(req.body, UserController.updateUserValidationSchema);
 
                 const { id } = req.params;
+                let photo: any = null;
+                if (req.file) photo = (await awsConnector.updateFile(req.file)).Location;
 
                 if (!phoneNumber && !name && !username && !photo && !password) {
                     throw new httpError.BadRequest({message: "parameters for update user was expected"} as any);

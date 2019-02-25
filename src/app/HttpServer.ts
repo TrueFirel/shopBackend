@@ -69,7 +69,7 @@ export default class HttpServer {
         const { "default": routes } = await import(filename);
 
         if (routes.call) {
-            return routes.call(this.expressRouter, this.dbProcessor, this.messageClient);
+            return routes.call(this.expressRouter, this.dbProcessor, this.messageClient, this.config);
         }
     }
 

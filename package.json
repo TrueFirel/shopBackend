@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/TrueFirel/shopBackend#readme",
   "dependencies": {
+    "aws-sdk": "^2.409.0",
+    "bluebird": "^3.5.3",
     "chalk": "^2.4.2",
     "cors": "^2.8.5",
     "dot-prop": "^4.2.0",
@@ -31,6 +33,9 @@
     "js-sha512": "^0.8.0",
     "jsonwebtoken": "^8.4.0",
     "log4js": "^4.0.2",
+    "multer": "^1.4.1",
+    "multer-s3": "^2.9.0",
+    "multiparty": "^4.2.1",
     "realm": "^2.23.0",
     "twilio": "^3.28.0",
     "typescript": "latest",
@@ -39,6 +44,7 @@
     "winston-chalk-formatter": "0.1.0-alpha.8cc40d99"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.25",
     "@types/cors": "^2.8.4",
     "@types/dot-prop": "^4.2.0",
     "@types/dotenv": "^6.1.0",
@@ -46,6 +52,9 @@
     "@types/http-errors": "^1.6.1",
     "@types/joi": "^14.3.1",
     "@types/jsonwebtoken": "^8.3.0",
+    "@types/multer": "^1.3.7",
+    "@types/multer-s3": "^2.7.6",
+    "@types/multiparty": "0.0.32",
     "@types/uuid": "^3.4.4",
     "eslint": "^5.13.0",
     "tslint": "^5.12.1"

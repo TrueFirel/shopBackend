@@ -7,28 +7,24 @@ import MessageClient from "../../app/MessageClient";
 import ShopAuthResource from "../../resources/ShopAuthResource";
 import ShopCollectionResource from "../../resources/ShopCollectionResource";
 import ShopResource from "../../resources/ShopResource";
+import AWSConnector from "../../util/AWSConnector";
 import Validator from "../../util/Validator";
 
-export default function(dbProcessor: DBProcessor, messageClient: MessageClient) {
+export default function(dbProcessor: DBProcessor, messageClient: MessageClient, awsConnector: AWSConnector) {
 
     const { connection } = dbProcessor;
 
     return class ShopController {
 
         public static RegisterShopValidationSchema = {
-            company_name: Joi.string().required(),
-            address: Joi.string().required(),
-            web_site: Joi.string().required(),
-            photo: Joi.string().optional(),
             contact_number: Joi.string().required(),
-            password: Joi.string().required(),
         };
 
         public static UpdateShopValidationSchema = {
             company_name: Joi.string().optional(),
             address: Joi.string().optional(),
             web_site: Joi.string().optional(),
-            photo: Joi.string().optional(),
+            photo: Joi.string().base64().optional(),
             contact_number: Joi.string().optional(),
             password: Joi.string().optional(),
         };
@@ -57,18 +53,11 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
 
         public static async registerShop(req: any, res: any, next: any) {
             try {
-
                 const {
-                    company_name: companyName,
-                    address,
-                    web_site: webSite,
-                    photo,
                     contact_number: contactNumber,
-                    password,
                 } = Validator(req.body, ShopController.RegisterShopValidationSchema);
 
                 const id = uuid();
-                // const token = dbProcessor.createToken({id});
 
                 let shop = connection.objects("shop").filtered(`contact_number = "${contactNumber}"`)[0];
 
@@ -81,15 +70,9 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
 
                             if (shop && !shop.token) {
                                 shop.verification_code = verificationCode;
-                                shop.company_name = companyName;
-                                shop.address = address;
-                                shop.web_site = webSite;
-                                shop.photo = photo;
-                                shop.password = password;
                             } else {
-                                shop = connection.create("shop", {id, company_name: companyName, address,
-                                web_site: webSite, photo, contact_number: contactNumber, create_time: new Date(),
-                                password: sha512(password), verification_code: verificationCode });
+                                shop = connection.create("shop", {id, contact_number: contactNumber, create_time: new Date(),
+                                    verification_code: verificationCode });
                             }
 
                             next(new ShopResource(shop));
@@ -110,11 +93,13 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
                     company_name: companyName,
                     address,
                     web_site: webSite,
-                    photo,
                     contact_number: contactNumber,
                     password,
                 } = Validator(req.body, ShopController.UpdateShopValidationSchema);
                 const { id } = req.params;
+
+                let photo: any = null;
+                if (req.file) photo = (await awsConnector.updateFile(req.file)).Location;
 
                 if (!companyName && !address && !webSite && !photo && !contactNumber && !password) {
                     throw new httpError.BadRequest({message: "parameters for update shop was expected"} as any);
@@ -130,7 +115,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient) 
                         if (webSite) shop.web_site = webSite;
                         if (photo) shop.photo = photo;
                         if (contactNumber) shop.contact_number = contactNumber;
-                        if (password) shop.password = password;
+                        if (password) shop.password = sha512(password);
 
                         next(new ShopResource(shop));
                     } catch (err) {
