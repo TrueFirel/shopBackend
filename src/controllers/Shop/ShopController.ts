@@ -17,7 +17,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     return class ShopController {
 
         public static RegisterShopValidationSchema = {
-            contact_number: Joi.string().required(),
+            phone_number: Joi.string().required(),
         };
 
         public static UpdateShopValidationSchema = {
@@ -25,7 +25,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
             address: Joi.string().optional(),
             web_site: Joi.string().optional(),
             photo: Joi.string().base64().optional(),
-            contact_number: Joi.string().optional(),
+            phone_number: Joi.string().optional(),
             password: Joi.string().optional(),
         };
 
@@ -54,12 +54,12 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
         public static async registerShop(req: any, res: any, next: any) {
             try {
                 const {
-                    contact_number: contactNumber,
+                    phone_number: contactNumber,
                 } = Validator(req.body, ShopController.RegisterShopValidationSchema);
 
                 const id = uuid();
 
-                let shop = connection.objects("shop").filtered(`contact_number = "${contactNumber}"`)[0];
+                let shop = connection.objects("shop").filtered(`phone_number = "${contactNumber}"`)[0];
 
                 if (shop && shop.token) throw new httpError.Unauthorized({ message: "shop with such contact number already exist" } as any);
                 else {
@@ -71,7 +71,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
                             if (shop && !shop.token) {
                                 shop.verification_code = verificationCode;
                             } else {
-                                shop = connection.create("shop", {id, contact_number: contactNumber, create_time: new Date(),
+                                shop = connection.create("shop", {id, phone_number: contactNumber, create_time: new Date(),
                                     verification_code: verificationCode });
                             }
 
@@ -93,7 +93,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
                     company_name: companyName,
                     address,
                     web_site: webSite,
-                    contact_number: contactNumber,
+                    phone_number: contactNumber,
                     password,
                 } = Validator(req.body, ShopController.UpdateShopValidationSchema);
                 const { id } = req.params;
@@ -114,7 +114,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
                         if (address) shop.address = address;
                         if (webSite) shop.web_site = webSite;
                         if (photo) shop.photo = photo;
-                        if (contactNumber) shop.contact_number = contactNumber;
+                        if (contactNumber) shop.phone_number = contactNumber;
                         if (password) shop.password = sha512(password);
 
                         next(new ShopResource(shop));

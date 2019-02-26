@@ -22,7 +22,7 @@ export default {
             optional: true,
         },
         create_time: "date",
-        contact_number: "string",
+        phone_number: "string",
         products: "product[]",
         photo: {
             type: "string",

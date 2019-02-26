@@ -18,18 +18,18 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     return class UserController {
 
         public static registerUserValidationSchema = {
-            number: Joi.string().min(5).max(15).required(),
+            phone_number: Joi.string().min(5).max(15).required(),
         };
 
         public static loginUserValidationSchema = {
-            number: Joi.string().min(5).max(15).required(),
+            phone_number: Joi.string().min(5).max(15).required(),
             password: Joi.string().required(),
         };
 
         public static updateUserValidationSchema = {
             name: Joi.string().optional().allow(null),
             username: Joi.string().optional().allow(null),
-            number: Joi.string().min(5).max(15).optional().allow(null),
+            nphone_number: Joi.string().min(5).max(15).optional().allow(null),
             photo: Joi.string().base64().optional().allow(null),
             password: Joi.string().optional().allow(null),
         };
@@ -37,7 +37,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
         public static async registerUser(req: any, res: any, next: any) {
             try {
                 const {
-                    number: phoneNumber,
+                    phone_number: phoneNumber,
                 }: any = Validator(req.body, UserController.registerUserValidationSchema);
 
                 const id = uuid();
@@ -94,12 +94,12 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
         // Need to be moved to another controller
         public static async loginAccount(req: any, res: any, next: any) {
             try {
-                const { number: phoneNumber, password } = Validator(req.body, UserController.loginUserValidationSchema);
+                const { phone_number: phoneNumber, password } = Validator(req.body, UserController.loginUserValidationSchema);
                 const user = connection.objects("user")
                     .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
                 if (!user) {
                     const shop = connection.objects("shop")
-                        .filtered(`contact_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
+                        .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
                     if (!shop) {
                         throw new httpError.Unauthorized({message: "such account is not exist"} as any);
                     }
@@ -113,7 +113,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
         public static async updateUser(req: any, res: any, next: any) {
             try {
                 const {
-                    number: phoneNumber,
+                    phone_number: phoneNumber,
                     name,
                     username,
                     password,
