@@ -7,7 +7,7 @@ export default {
         event_name: "string",
         web_site: "string",
         price: "double",
-        shop_id: "string",
+        shop: "shop",
         create_time: "date",
         reviews: "review[]",
         likes: {
@@ -17,6 +17,10 @@ export default {
         dislikes: {
             optional: true,
             type: "int",
+        },
+        photo: {
+            type: "string",
+            optional: true,
         },
     },
 };

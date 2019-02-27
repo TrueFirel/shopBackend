@@ -1,6 +1,5 @@
 import Aws from "aws-sdk";
 import bluebird from "bluebird";
-import * as fs from "fs";
 
 export default class AWSConnector {
     public s3: any;

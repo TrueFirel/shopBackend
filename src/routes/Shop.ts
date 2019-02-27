@@ -11,15 +11,16 @@ const upload = multer();
 export default function(dbProcessor: DBProcessor, messageClient: MessageClient, config: Config) {
 
     const checkAuth = CheckAuth(dbProcessor);
-    const ShopController = ShopControllerWrapper(dbProcessor, messageClient, new AWSConnector(config));
-    const ProductController = ProductControllerWrapper(dbProcessor);
+    const awsConnector = new AWSConnector(config);
+    const ShopController = ShopControllerWrapper(dbProcessor, messageClient, awsConnector);
+    const ProductController = ProductControllerWrapper(dbProcessor, awsConnector);
 
     this.get("/shop/:id", checkAuth.isAnyAuth, ShopController.getShop);
     this.get("/shop", checkAuth.isAnyAuth, ShopController.getShops);
     this.get("/shop/:id/product", checkAuth.isAnyAuth, ProductController.getProducts);
     this.post("/shop", upload.single("photo"), ShopController.registerShop);
-    this.post("/shop/:id/product", checkAuth.isShopAuth, ProductController.AddProduct);
+    this.post("/shop/:id/product", checkAuth.isShopAuth, upload.single("photo"),  ProductController.AddProduct);
     this.put("/shop/:id", checkAuth.isShopAuth, upload.single("photo"), ShopController.updateShop);
     this.put("/shop/:id/verify", ShopController.verifyPhoneNumber);
-    this.put("/shop/:shopId/product/:id", checkAuth.isShopAuth, ProductController.updateProduct);
+    this.put("/shop/:shopId/product/:id", checkAuth.isShopAuth, upload.single("photo"), ProductController.updateProduct);
 }

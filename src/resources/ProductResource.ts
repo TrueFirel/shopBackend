@@ -1,4 +1,5 @@
 import BaseResource from "./BaseResource";
+import ShopResource from "./ShopResource";
 
 export default class ProductResource extends BaseResource {
 
@@ -10,10 +11,11 @@ export default class ProductResource extends BaseResource {
             web_site: this.web_site,
             description: this.description,
             price: this.price,
-            shop_id: this.shop_id,
+            shop: new ShopResource(this.shop).uncover(),
             likes: this.likes,
             dislikes: this.dislikes,
             create_time: this.create_time,
+            photo: this.photo,
         };
     }
 }

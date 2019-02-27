@@ -7,10 +7,11 @@ import ProductCollectionResource from "../../resources/ProductCollectionResource
 import ProductResource from "../../resources/ProductResource";
 import shop from "../../schemas/shop";
 import ArrayStreamliner from "../../util/ArrayStreamliner";
+import AWSConnector from "../../util/AWSConnector";
 import RealmListConverter from "../../util/RealmListConverter";
 import Validator from "../../util/Validator";
 
-export default function(dbProcessor: DBProcessor) {
+export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
 
     const { connection } = dbProcessor;
 
@@ -45,6 +46,9 @@ export default function(dbProcessor: DBProcessor) {
 
                 const { id: shopId } = req.params;
 
+                let photo: any = null;
+                if (req.file) photo = (await awsConnector.updateFile(req.file)).Location;
+
                 if (!Event[eventName]) {
                     throw new httpError.NotFound({ message: "event with such name was not found" } as any);
                 }
@@ -58,8 +62,8 @@ export default function(dbProcessor: DBProcessor) {
                     try {
                         const product = connection.create("product", {
                             product_name: productName, event_name: eventName, description,
-                            web_site: webSite, price, shop_id: shopId, id, likes: 0, dislikes: 0,
-                            create_time: new Date(),
+                            web_site: webSite, price, shop, id, likes: 0, dislikes: 0,
+                            create_time: new Date(), photo,
                         });
                         shop.products.push(product);
                         next(new ProductResource(product));
@@ -82,7 +86,10 @@ export default function(dbProcessor: DBProcessor) {
                     price,
                 }: any = Validator(req.body, ProductController.UpdateProductValidationSchema);
 
-                if (!productName && !eventName && !description && !webSite && !price) {
+                let photo: any = null;
+                if (req.file) photo = (await awsConnector.updateFile(req.file)).Location;
+
+                if (!productName && !eventName && !description && !webSite && !price && !photo) {
                     throw new httpError.BadRequest({ message: "parameters for update user was expected" } as any);
                 }
 
@@ -102,6 +109,7 @@ export default function(dbProcessor: DBProcessor) {
                     if (description) product.description = description;
                     if (webSite) product.web_site = webSite;
                     if (price) product.price = price;
+                    if (photo) product.photo = photo;
                     next(new ProductResource(product));
                 });
             } catch (err) {
