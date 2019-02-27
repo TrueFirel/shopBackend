@@ -1,5 +1,6 @@
 import Aws from "aws-sdk";
 import bluebird from "bluebird";
+import httpError from "http-errors";
 
 export default class AWSConnector {
     public s3: any;
@@ -18,12 +19,17 @@ export default class AWSConnector {
 
     public async updateFile(image: any) {
         const bucket = process.env.S3_BUCKET;
+        const mimetype = image.mimetype.split("/")[1];
+
+        if (mimetype !== "png" && mimetype !== "jpg" && mimetype !== "tif") {
+            throw new httpError.BadRequest({ message: "incorrect image format" } as any);
+        }
 
         return this.s3.upload({
             ACL: "public-read",
             Body: image.buffer,
             Bucket: process.env.S3_BUCKET,
-            Key: `${bucket}/${Date.now().toString()}`,
+            Key: `${bucket}/${Date.now().toString()}.${mimetype}`,
         }).promise();
     }
 }
