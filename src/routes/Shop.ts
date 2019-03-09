@@ -19,6 +19,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     this.get("/shop", checkAuth.isAnyAuth, ShopController.getShops);
     this.get("/shop/:id/product", checkAuth.isAnyAuth, ProductController.getProducts);
     this.post("/shop", upload.single("photo"), ShopController.registerShop);
+    this.post("/shop/login", ShopController.loginShop);
     this.post("/shop/:id/product", checkAuth.isShopAuth, upload.single("photo"),  ProductController.AddProduct);
     this.put("/shop/:id", checkAuth.isShopAuth, upload.single("photo"), ShopController.updateShop);
     this.put("/shop/:id/verify", ShopController.verifyPhoneNumber);

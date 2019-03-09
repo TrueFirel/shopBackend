@@ -44,15 +44,17 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
 
                 let user = connection.objects("user").filtered(`phone_number = "${phoneNumber}"`)[0];
 
-                if (user && user.token) throw new httpError.BadRequest({ message: "user with such phone number already exist" } as any);
-                else {
+                if (user && user.token && user.password) {
+                    throw new httpError.BadRequest({ message: "user with such phone number already exist" } as any);
+                } else {
                     await  connection.write(async () => {
                         try {
                             const verificationCode = MessageClient.generateCode(4);
                             messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`);
 
-                            if (user && !user.token) user.verification_code = verificationCode;
-                            else {
+                            if (user && (!user.token || (user.token && !user.password))) {
+                                user.verification_code = verificationCode;
+                            } else {
                                 user = connection.create("user", { id, create_time: Date(), phone_number: phoneNumber,
                                     verification_code: verificationCode });
                             }
@@ -92,19 +94,13 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
         }
 
         // Need to be moved to another controller
-        public static async loginAccount(req: any, res: any, next: any) {
+        public static async loginUser(req: any, res: any, next: any) {
             try {
                 const { phone_number: phoneNumber, password } = Validator(req.body, UserController.loginUserValidationSchema);
                 const user = connection.objects("user")
                     .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
-                if (!user) {
-                    const shop = connection.objects("shop")
-                        .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
-                    if (!shop) {
-                        throw new httpError.Unauthorized({message: "such account is not exist"} as any);
-                    }
-                    next(new ShopAuthResource(shop));
-                } else next(new UserAuthResource(user));
+                if (!user) throw new httpError.Unauthorized({message: "such account is not exist"} as any);
+                else next(new UserAuthResource(user));
             } catch (err) {
                 next(err);
             }

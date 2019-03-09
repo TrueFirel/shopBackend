@@ -7,6 +7,7 @@ import MessageClient from "../../app/MessageClient";
 import ShopAuthResource from "../../resources/ShopAuthResource";
 import ShopCollectionResource from "../../resources/ShopCollectionResource";
 import ShopResource from "../../resources/ShopResource";
+import UserAuthResource from "../../resources/UserAuthResource";
 import AWSConnector from "../../util/AWSConnector";
 import Validator from "../../util/Validator";
 
@@ -27,6 +28,11 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
             photo: Joi.string().base64().optional(),
             phone_number: Joi.string().optional(),
             password: Joi.string().optional(),
+        };
+
+        public static loginUserValidationSchema = {
+            phone_number: Joi.string().min(5).max(15).required(),
+            password: Joi.string().required(),
         };
 
         public static async verifyPhoneNumber(req: any, res: any, next: any) {
@@ -51,6 +57,18 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
             }
         }
 
+        public static async loginShop(req: any, res: any, next: any) {
+            try {
+                const { phone_number: phoneNumber, password } = Validator(req.body, ShopController.loginUserValidationSchema);
+                const shop = connection.objects("shop")
+                    .filtered(`phone_number = "${phoneNumber}" AND password = "${sha512(password)}" AND token != null`)[0];
+                if (!shop) throw new httpError.Unauthorized({message: "such account is not exist"} as any);
+                next(new ShopAuthResource(shop));
+            } catch (err) {
+                next(err);
+            }
+        }
+
         public static async registerShop(req: any, res: any, next: any) {
             try {
                 const {
@@ -61,14 +79,14 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
 
                 let shop = connection.objects("shop").filtered(`phone_number = "${contactNumber}"`)[0];
 
-                if (shop && shop.token) throw new httpError.Unauthorized({ message: "shop with such contact number already exist" } as any);
-                else {
+                if (shop && shop.token && shop.password) {
+                    throw new httpError.Unauthorized({ message: "shop with such contact number already exist" } as any);
+                } else {
                     await connection.write(() => {
                         try {
                             const verificationCode = MessageClient.generateCode(4);
                             messageClient.sendMessage(contactNumber, `Your verification code is: ${verificationCode}`);
-
-                            if (shop && !shop.token) {
+                            if (shop && (!shop.token || (shop.token && !shop.password))) {
                                 shop.verification_code = verificationCode;
                             } else {
                                 shop = connection.create("shop", {id, phone_number: contactNumber, create_time: new Date(),

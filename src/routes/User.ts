@@ -20,6 +20,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     this.get("/user/:id", checkAuth.isAnyAuth, UserController.getUser);
     this.get("/user/:id/favorite", checkAuth.isAnyAuth, userRateController.getUserRates);
     this.post("/user", upload.single("photo"), UserController.registerUser);
+    this.post("/user/login", UserController.loginUser);
     this.post("/user/:id/rate", checkAuth.isUserAuth, userRateController.postRate);
     this.post("/user/:id/review", checkAuth.isUserAuth, UserReviewController.PostReview);
     this.put("/user/:id", checkAuth.isUserAuth, upload.single("photo"), UserController.updateUser);
