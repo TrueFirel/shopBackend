@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "fix": "tslint -p . --fix",
-    "lint": "tslint -p ."
+    "lint": "tslint -p .",
+    "fake": "node dist/util/Faker/index.js"
   },
   "repository": {
     "type": "git",
