@@ -5,6 +5,7 @@ import DBProcessor from "../../app/DBProcessor";
 import { Event } from "../../constants/Events";
 import ProductCollectionResource from "../../resources/ProductCollectionResource";
 import ProductResource from "../../resources/ProductResource";
+import ShopResource from "../../resources/ShopResource";
 import shop from "../../schemas/shop";
 import ArrayStreamliner from "../../util/ArrayStreamliner";
 import AWSConnector from "../../util/AWSConnector";
@@ -63,8 +64,12 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                         const product = connection.create("product", {
                             product_name: productName, event_name: eventName, description,
                             web_site: webSite, price, shop, id, likes: 0, dislikes: 0,
-                            create_time: new Date(), photo,
+                            create_time: new Date(),
                         });
+                        if (photo) {
+                            const photoInstance = connection.create("product_photo", { id: uuid(), product_id: product.id, photo});
+                            product.photo.push(photoInstance);
+                        }
                         shop.products.push(product);
                         next(new ProductResource(product));
                     } catch (err) {
@@ -109,7 +114,10 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                     if (description) product.description = description;
                     if (webSite) product.web_site = webSite;
                     if (price) product.price = price;
-                    if (photo) product.photo = photo;
+                    if (photo) {
+                        const photoInstance = connection.create("product_photo", { id: uuid(), product_id: product.id, photo});
+                        product.photo.push(photoInstance);
+                    }
                     next(new ProductResource(product));
                 });
             } catch (err) {
@@ -141,8 +149,12 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                 if (id) {
                     const shop = connection.objects("shop").filtered(`id = "${id}"`)[0];
                     if (!shop) throw new httpError.NotFound({ message: "shop with such id was not found" } as any);
-                    products = new ArrayStreamliner(new RealmListConverter(shop.products).data);
-                } else products = new ArrayStreamliner(new RealmListConverter(connection.objects("product")).data);
+                    const productsResource = new ProductCollectionResource(shop.products, {}).uncover();
+                    products = new ArrayStreamliner(productsResource.data);
+                } else {
+                    const productsResource = new ProductCollectionResource(connection.objects("product"), {}).uncover();
+                    products = new ArrayStreamliner(productsResource.data);
+                }
 
                 if  (filter_value && filter === "price") products.filterLessNumbers(filter, filter_value);
                 if  (filter_value && filter === "event_name") products.filterByString(filter, filter_value);
@@ -154,6 +166,25 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                 }
 
                 next(new ProductCollectionResource(products.data, { offset, limit }));
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static async deleteProductPhoto(req: any, res: any, next: any) {
+            try {
+                const { product_id, id } = req.params;
+
+                if (!product_id && !id) {
+                    throw new httpError.BadRequest({ message: "query must contain product_id and id" } as any);
+                }
+                const removingPhoto = connection.objects("product_photo")
+                    .find((photo: any) => photo.id === id && photo.product_id === product_id);
+                if (!removingPhoto) throw new httpError.NotFound({ message: "requested photo was not found" } as any);
+                await connection.write(() => {
+                    connection.delete(removingPhoto);
+                });
+                next({ message: "success" });
             } catch (err) {
                 next(err);
             }

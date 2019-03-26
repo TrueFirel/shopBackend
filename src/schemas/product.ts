@@ -18,9 +18,6 @@ export default {
             optional: true,
             type: "int",
         },
-        photo: {
-            type: "string",
-            optional: true,
-        },
+        photo: "product_photo[]",
     },
 };

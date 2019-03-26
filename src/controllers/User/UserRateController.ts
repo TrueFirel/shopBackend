@@ -3,7 +3,6 @@ import Joi from "joi";
 import DBProcessor from "../../app/DBProcessor";
 import UserFavoriteCollectionResource from "../../resources/UserFavoriteCollectionResource";
 import ArrayStreamliner from "../../util/ArrayStreamliner";
-import RealmListConverter from "../../util/RealmListConverter";
 import Validator from "../../util/Validator";
 
 export default function(dbProcessor: DBProcessor) {
@@ -79,7 +78,8 @@ export default function(dbProcessor: DBProcessor) {
 
                 const user = connection.objects("user").filtered(`id = "${id}"`)[0];
                 if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
-                const favorites = new ArrayStreamliner(new RealmListConverter(user.favorite_products).data);
+                const favoriteResource = new UserFavoriteCollectionResource(user.favorite_products, {}).uncover();
+                const favorites = new ArrayStreamliner(favoriteResource.data);
 
                 if  (filter_value && filter === "price") favorites.filterLessNumbers(`product.${filter}`, filter_value);
                 if  (filter_value && filter === "event_name") favorites.filterByString(`product.${filter}`, filter_value);

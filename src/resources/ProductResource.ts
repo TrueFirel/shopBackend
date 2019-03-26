@@ -1,4 +1,5 @@
 import BaseResource from "./BaseResource";
+import ProductPhotoCollectionResource from "./ProductPhotoCollectionResource";
 import ShopResource from "./ShopResource";
 
 export default class ProductResource extends BaseResource {
@@ -15,7 +16,7 @@ export default class ProductResource extends BaseResource {
             likes: this.likes,
             dislikes: this.dislikes,
             create_time: this.create_time,
-            photo: this.photo,
+            photo: (new ProductPhotoCollectionResource(this.photo, {})).uncover().data,
         };
     }
 }
