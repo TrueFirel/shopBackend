@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/TrueFirel/shopBackend#readme",
   "dependencies": {
+    "async-json": "0.0.2",
     "aws-sdk": "^2.409.0",
     "bluebird": "^3.5.3",
     "chalk": "^2.4.2",
@@ -38,6 +39,7 @@
     "multer-s3": "^2.9.0",
     "multiparty": "^4.2.1",
     "realm": "^2.23.0",
+    "safe-json-stringify": "^1.2.0",
     "twilio": "^3.28.0",
     "typescript": "latest",
     "uuid": "^3.3.2",
@@ -56,6 +58,7 @@
     "@types/multer": "^1.3.7",
     "@types/multer-s3": "^2.7.6",
     "@types/multiparty": "0.0.32",
+    "@types/safe-json-stringify": "^1.0.1",
     "@types/uuid": "^3.4.4",
     "eslint": "^5.13.0",
     "tslint": "^5.12.1"

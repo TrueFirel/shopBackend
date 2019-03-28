@@ -24,7 +24,7 @@ export default class Faker {
                 const filler = uuid();
                 const user = this.connection.create("user", {
                     id: filler, token: this.dbProcessor.createToken(filler), username: filler, name: filler,
-                    password: sha512(this.config.env.FAKE_PASSWORD.toString()), create_time: Date(), phone_number: filler,
+                    password: sha512(this.config.env.FAKE_PASSWORD), create_time: Date(), phone_number: filler,
                     photo: this.config.env.FAKE_USER_IMAGE,
                 });
                 users.push(user);
