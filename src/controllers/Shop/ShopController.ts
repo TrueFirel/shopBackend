@@ -7,7 +7,7 @@ import MessageClient from "../../app/MessageClient";
 import ShopAuthResource from "../../resources/ShopAuthResource";
 import ShopCollectionResource from "../../resources/ShopCollectionResource";
 import ShopResource from "../../resources/ShopResource";
-import UserAuthResource from "../../resources/UserAuthResource";
+import ArrayStreamliner from "../../util/ArrayStreamliner";
 import AWSConnector from "../../util/AWSConnector";
 import Validator from "../../util/Validator";
 
@@ -160,11 +160,14 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
 
         public static getShops(req: any, res: any, next: any) {
             try {
-                const { offset, limit } = req.query;
+                const { offset, limit, search_value } = req.query;
 
-                const shops = connection.objects("shop");
+                const shops = new ShopCollectionResource(connection.objects("shop"), {}).uncover();
+                const shopsFiltrated = new ArrayStreamliner(shops.data);
 
-                next(new ShopCollectionResource(shops, { offset, limit }));
+                if (search_value) shopsFiltrated.searchByString("company_name", search_value);
+
+                next(new ShopCollectionResource(shopsFiltrated.data, { offset, limit }));
             } catch (err) {
                 next(err);
             }

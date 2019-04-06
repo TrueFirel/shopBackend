@@ -13,8 +13,9 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     const ProductController = ProductControllerWrapper(dbProcessor, awsConnector);
     const UserReviewController = UserReviewControllerWrapper(dbProcessor);
 
-    this.get("/product/:id", checkAuth.isAnyAuth, ProductController.getProduct);
     this.get("/product", checkAuth.isAnyAuth, ProductController.getProducts);
+    this.get("/product/latest", checkAuth.isAnyAuth, ProductController.getLatestProducts);
+    this.get("/product/:id", checkAuth.isAnyAuth, ProductController.getProduct);
     this.get("/product/:id/review", checkAuth.isAnyAuth, UserReviewController.getReviews);
     this.delete("/product/:product_id/photo/:id", checkAuth.isShopAuth, ProductController.deleteProductPhoto);
 }

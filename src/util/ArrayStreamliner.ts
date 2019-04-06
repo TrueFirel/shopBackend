@@ -47,6 +47,12 @@ export default class ArrayStreaminer {
         this.data = data;
     }
 
+    public searchByString(searchField: string, value: number) {
+        this.data = this.data.filter((element: any) => {
+            return element[searchField] && element[searchField].match(value);
+        });
+    }
+
     public filterMoreNumbers(dotPropField: string, value: number) {
         this.data = this.data.filter((element: any) => dotProp.get(element, dotPropField) >= value);
     }

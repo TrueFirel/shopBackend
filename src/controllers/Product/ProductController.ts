@@ -12,6 +12,8 @@ import AWSConnector from "../../util/AWSConnector";
 import RealmListConverter from "../../util/RealmListConverter";
 import Validator from "../../util/Validator";
 
+const DEFAULT_AMOUNT_OF_LATEST_PRODUCTS = 5;
+
 export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
 
     const { connection } = dbProcessor;
@@ -140,7 +142,7 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
 
         public static getProducts(req: any, res: any, next: any) {
             try {
-                const { offset, limit, sort, order, filter, filter_value  } = req.query;
+                const { offset, limit, sort, order, filter, filter_value, search_value } = req.query;
 
                 const { id } = req.params;
 
@@ -156,6 +158,8 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                     products = new ArrayStreamliner(productsResource.data);
                 }
 
+                if (search_value) products.searchByString("product_name", search_value);
+
                 if  (filter_value && filter === "price") products.filterLessNumbers(filter, filter_value);
                 if  (filter_value && filter === "event_name") products.filterByString(filter, filter_value);
 
@@ -166,6 +170,18 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                 }
 
                 next(new ProductCollectionResource(products.data, { offset, limit }));
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static getLatestProducts(req: any, res: any, next: any) {
+            try {
+                const { amount } = req.query;
+                const amountOfProducts = amount ? amount : DEFAULT_AMOUNT_OF_LATEST_PRODUCTS;
+                const products = connection.objects("product");
+
+                next(new ProductCollectionResource(products.slice(products.length - amountOfProducts, products.length), {}));
             } catch (err) {
                 next(err);
             }
