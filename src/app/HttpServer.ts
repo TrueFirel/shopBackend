@@ -2,8 +2,8 @@ import * as bodyParser from "body-parser";
 import cors from "cors";
 import express, { Express, Router } from "express";
 import { promises } from "fs";
-import { Server } from "http";
 import httpError from "http-errors";
+import https, { Server } from "https";
 import { parse } from "path";
 import BaseResource from "../resources/BaseResource";
 import Logger from "../util/Logger";
@@ -37,7 +37,6 @@ export default class HttpServer {
         this.config = config;
         this.dbProcessor = dbConnection;
         this.expressRouter = express.Router();
-        this.httpServer = new Server();
         this.logger = new Logger();
         this.messageClient = new MessageClient({
             sid: this.config.env.TWILLIO_SID,
@@ -58,7 +57,11 @@ export default class HttpServer {
         this.expressApp.use(HttpServer.resourceHandler.bind(this));
         this.expressApp.use(HttpServer.errorHandler.bind(this));
 
-        this.httpServer = await this.expressApp.listen(
+        const httpsCreds = await this.getSecureCredentials(
+            this.config.env.SSL_PUBLIC_KEY_PATH,
+            this.config.env.SSL_CERTIFICATE_PATH,
+        );
+        this.httpServer = await https.createServer(httpsCreds, this.expressApp).listen(
             { host: this.config.env.HOST, port: this.config.env.PORT }, () => {
             this.logger.info(`HTTP server was started on adress //${this.config.env.HOST}:${this.config.env.PORT}`);
         });
@@ -81,5 +84,14 @@ export default class HttpServer {
             if (stat.isDirectory()) await this.importRoutes(filePath);
             if (parse(file).ext === ".js") this.importRoute(filePath);
         }));
+    }
+
+    private async getSecureCredentials(keyPath: string, certPath: string) {
+        const key = await promises.readFile(keyPath);
+        const cert = await promises.readFile(certPath);
+        return {
+            key,
+            cert,
+        };
     }
 }
