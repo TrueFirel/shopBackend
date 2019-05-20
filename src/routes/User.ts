@@ -25,4 +25,6 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     this.post("/user/:id/review", checkAuth.isUserAuth, UserReviewController.PostReview);
     this.put("/user/:id", checkAuth.isUserAuth, upload.single("photo"), UserController.updateUser);
     this.put("/user/:id/verify", UserController.verifyPhoneNumber);
+    this.post("/user/:id/subscribe", checkAuth.isUserAuth, UserController.updateUserSubscription);
+    this.get("/user/:id/feed", checkAuth.isUserAuth, UserController.getProductsFeed);
 }

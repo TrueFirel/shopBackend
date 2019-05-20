@@ -7,6 +7,7 @@ import MessageClient from "../../app/MessageClient";
 import ShopAuthResource from "../../resources/ShopAuthResource";
 import UserAuthResource from "../../resources/UserAuthResource";
 import UserCollectionResource from "../../resources/UserCollectionResource";
+import ShopProductsCollectionResource from "../../resources/ShopProductsCollectionResource";
 import UserResource from "../../resources/UserResource";
 import AWSConnector from "../../util/AWSConnector";
 import Validator from "../../util/Validator";
@@ -33,6 +34,12 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
             photo: Joi.string().base64().optional().allow(null),
             password: Joi.string().optional().allow(null),
         };
+
+        public static subscribtionValidationSchema = {
+            shopId: Joi.string().required(),
+            isSubscribed: Joi.bool().required(),
+        };
+
 
         public static async registerUser(req: any, res: any, next: any) {
             try {
@@ -159,6 +166,56 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
                 const { offset, limit } = req.query;
                 const users = connection.objects("user");
                 next(new UserCollectionResource(users, { offset, limit }));
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static async updateUserSubscription(req: any, res: any, next: any) {
+            try {
+                const {
+                    shopId,
+                    isSubscribed
+                } = Validator(req.body, UserController.subscribtionValidationSchema);
+
+                const { id } = req.params;
+                const shopToSubscribe = connection.objects("shop").filtered(`id = "${shopId}"`)[0];
+                if (!shopToSubscribe) throw new httpError.NotFound({message: "shop with such id was not found"} as any);
+                const user = connection.objects("user").filtered(`id = "${id}"`)[0];
+                if (!user) throw new httpError.NotFound({message: "user with such id was not found"} as any);
+                const shop = user.subscribed_shops.find((s: any) => s.id === shopId);
+
+                await connection.write(() => {
+                    try {
+                        if(isSubscribed && shop){
+                            res.send({ message: "You're already subscribed to this shop" });
+                        } else if(!isSubscribed && shop){
+                            const index: Number = user.subscribed_shops.findIndex((s: any) => s.id === shop.id);
+                            user.subscribed_shops.splice(index, 1);
+                        } else if(!isSubscribed && !shop){
+                            res.send({ message: "You have not subscribed to this shop" });
+                        } else {
+                            user.subscribed_shops.push(shopToSubscribe);
+                        }
+
+                        res.send({ message: "successful" });
+                    } catch (err) {
+                        throw new httpError.ServiceUnavailable({message: "server error"} as any);
+                    }
+                });
+            } catch(e){
+                next(e);
+            }
+        }
+
+        public static async getProductsFeed(req: any, res: any, next: any){
+            try {
+                const { offset, limit } = req.query;
+                const { id } = req.params;
+                const user = connection.objects("user").filtered(`id = "${id}"`)[0];
+                if (!user) throw new httpError.NotFound({message: "user with such id was not found"} as any);
+                const feedProducts = new ShopProductsCollectionResource(user.subscribed_shops, { offset, limit }).uncover();
+                res.json(feedProducts.sort((a: any, b: any) => (b.create_time - a.create_time)));
             } catch (err) {
                 next(err);
             }
