@@ -27,4 +27,6 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     this.put("/user/:id/verify", UserController.verifyPhoneNumber);
     this.post("/user/:id/subscribe", checkAuth.isUserAuth, UserController.updateUserSubscription);
     this.get("/user/:id/feed", checkAuth.isUserAuth, UserController.getProductsFeed);
+    this.get("/user/:userId/subscribe/:shopId", checkAuth.isUserAuth, UserController.checkSubscription);
+    this.get("/user/:userId/favorite/:productId", checkAuth.isUserAuth, UserController.checkFavorite);
 }

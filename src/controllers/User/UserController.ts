@@ -161,6 +161,40 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
             }
         }
 
+        public static checkFavorite(req: any, res: any, next: any) {
+            try {
+                const { userId, productId } = req.params;
+                const user = connection.objects("user").filtered(`id = "${userId}"`)[0];
+                if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
+
+                const product = user.favorite_products.find(({product}: any) => product.id === productId);
+
+                if(product)
+                    res.json({inFavorite: true});
+                else
+                    res.json({inFavorite: false});
+            } catch (err) {
+                next(err);
+            }
+        }
+
+        public static checkSubscription(req: any, res: any, next: any) {
+            try {
+                const { userId, shopId } = req.params;
+                const user = connection.objects("user").filtered(`id = "${userId}"`)[0];
+                if (!user) throw new httpError.BadRequest({ message: "user with such id was not found" } as any);
+
+                const shop = user.subscribed_shops.find((shop: any) => shop.id === shopId);
+
+                if(shop)
+                    res.json({isSubscribed: true});
+                else
+                    res.json({isSubscribed: false});
+            } catch (err) {
+                next(err);
+            }
+        }
+
         public static getUsers(req: any, res: any, next: any) {
             try {
                 const { offset, limit } = req.query;
