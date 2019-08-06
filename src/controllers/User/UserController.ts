@@ -39,6 +39,11 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
             shopId: Joi.string().required(),
             isSubscribed: Joi.bool().required(),
         };
+        
+        public static changePasswordValidationSchema = {
+            code: Joi.string().required(),
+            password: Joi.string().required(),
+        };
 
 
         public static async registerUser(req: any, res: any, next: any) {
@@ -57,7 +62,9 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
                     await  connection.write(async () => {
                         try {
                             const verificationCode = MessageClient.generateCode(4);
-                            messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`);
+                            messageClient.sendMessage(phoneNumber, `Your verification code is: ${verificationCode}`)
+                                .then(res => console.log(res))
+                                .catch(err => console.log(err));
 
                             if (user && (!user.token || (user.token && !user.password))) {
                                 user.verification_code = verificationCode;
@@ -69,11 +76,57 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
                             next(new UserResource(user));
                         } catch (err) {
                             throw new httpError.ServiceUnavailable({ message: `server error: ` } as any);
+                            console.log(err);
                         }
                     });
                 }
 
             } catch (err) {
+                next(err);
+            }
+        }
+
+        public static async requestCode(req: any, res: any, next: any) {
+            try {
+                const { id } = req.params;
+                const user = connection.objects("user").filtered(`id = "${id}"`)[0];
+
+                if (!user) {
+                    throw new httpError.BadRequest({ message: "the user is not exists in the db" } as any);
+                } else {
+                    await  connection.write(async () => {
+                        const verificationCode = MessageClient.generateCode(4);
+                        messageClient.sendMessage(user.phone_number, `Your code for password reset is: ${verificationCode}`)
+                            .then(res => console.log(res))
+                            .catch(err => console.log(err));
+
+                        if (user) {
+                            user.verification_code = verificationCode;
+                        }
+
+                        next(new UserResource(user));
+                    });
+                }        
+            } catch(err) {
+                next(err);
+            }
+        }
+
+        public static async changePassword(req: any, res: any, next: any){
+            try {
+                const { password, code } = Validator(req.body, this.changePasswordValidationSchema);
+                const { id } = req.params;
+
+                const user = connection.objects("user").filtered(`id = "${id}" AND verification_code = "${code}"`)[0];
+                if (!user) throw new httpError.NotFound({ message: "user with such id was not find or have another verification code" } as any);
+
+                await connection.write(() => {
+                    user.password = sha512(password);
+
+                    next(new UserResource(user));
+                });
+
+            } catch(err) {
                 next(err);
             }
         }
