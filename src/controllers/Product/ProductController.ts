@@ -205,5 +205,24 @@ export default function(dbProcessor: DBProcessor, awsConnector: AWSConnector) {
                 next(err);
             }
         }
+
+        public static async deleteProduct(req: any, res: any, next: any) {
+            try {
+                const { product_id } = req.params;
+
+                if (!product_id) {
+                    throw new httpError.BadRequest({ message: "query must contain product_id" } as any);
+                }
+                const removingProduct = connection.objects("product")
+                    .find((product: any) => product.id === product_id);
+                if (!removingProduct) throw new httpError.NotFound({ message: "requested product was not found" } as any);
+                await connection.write(() => {
+                    connection.delete(removingProduct);
+                });
+                next({ message: "success" });
+            } catch (err) {
+                next(err);
+            }
+        }
     };
 }

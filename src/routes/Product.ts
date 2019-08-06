@@ -18,4 +18,5 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     this.get("/product/:id", checkAuth.isAnyAuth, ProductController.getProduct);
     this.get("/product/:id/review", checkAuth.isAnyAuth, UserReviewController.getReviews);
     this.delete("/product/:product_id/photo/:id", checkAuth.isShopAuth, ProductController.deleteProductPhoto);
+    this.delete("/product/:product_id/", checkAuth.isShopAuth, ProductController.deleteProduct);
 }
