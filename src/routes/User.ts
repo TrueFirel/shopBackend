@@ -29,6 +29,6 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
     this.get("/user/:id/feed", checkAuth.isUserAuth, UserController.getProductsFeed);
     this.get("/user/:userId/subscribe/:shopId", checkAuth.isUserAuth, UserController.checkSubscription);
     this.get("/user/:userId/favorite/:productId", checkAuth.isUserAuth, UserController.checkFavorite);
-    this.get("/user/:id/code", checkAuth.isUserAuth, UserController.requestCode);
-    this.put("/user/:id/password", checkAuth.isUserAuth, UserController.changePassword);
+    this.get("/user/:id/code", UserController.requestCode);
+    this.put("/user/:id/password", UserController.changePassword);
 }
