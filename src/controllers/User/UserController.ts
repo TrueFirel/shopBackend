@@ -114,7 +114,7 @@ export default function(dbProcessor: DBProcessor, messageClient: MessageClient, 
 
         public static async changePassword(req: any, res: any, next: any){
             try {
-                const { password, code } = Validator(req.body, this.changePasswordValidationSchema);
+                const { password, code } = Validator(req.body, UserController.changePasswordValidationSchema);
                 const { id } = req.params;
 
                 const user = connection.objects("user").filtered(`id = "${id}" AND verification_code = "${code}"`)[0];
